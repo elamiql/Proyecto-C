@@ -1,0 +1,14 @@
+# Archivos de compilación
+*.o
+*.out
+*.exe
+*.dll
+
+# Carpetas de compilación y temporales
+build/
+bin/
+obj/
+
+# Archivos generados o de configuración temporal
+*.log
+*.tmp
