@@ -1,5 +1,6 @@
 #define SDL_MAIN_HANDLED
 #include <SDL2/SDL.h>
+#include <SDL2/SDL_image.h>
 #include <stdio.h>
 
 int main(int argc, char* argv[]) {
@@ -11,7 +12,7 @@ int main(int argc, char* argv[]) {
 
     // Crear una ventana
     SDL_Window* ventana = SDL_CreateWindow(
-        "Mi ventana SDL2",                // Título de la ventana
+        "Pac-Man",                // Título de la ventana
         SDL_WINDOWPOS_CENTERED,           // Posición X
         SDL_WINDOWPOS_CENTERED,           // Posición Y
         800,                              // Ancho de la ventana
@@ -33,6 +34,34 @@ int main(int argc, char* argv[]) {
         SDL_Quit();
         return 1;
     }
+    if (!(IMG_Init(IMG_INIT_PNG) & IMG_INIT_PNG)) {
+        printf("Error al inicializar SDL_image: %s\n", IMG_GetError());
+        SDL_DestroyRenderer(renderer);
+        SDL_DestroyWindow(ventana);
+        SDL_Quit();
+        return 1;
+    }
+
+    SDL_Surface* surface = IMG_Load("img/dios.jpg");
+    if (!surface) {
+        printf("Error al cargar la imagen: %s\n", IMG_GetError());
+        IMG_Quit();
+        SDL_DestroyRenderer(renderer);
+        SDL_DestroyWindow(ventana);
+        SDL_Quit();
+        return 1;
+    }
+
+    SDL_Texture* texture = SDL_CreateTextureFromSurface(renderer, surface);
+    SDL_FreeSurface(surface);
+    if (!texture) {
+        printf("Error al crear la textura: %s\n", SDL_GetError());
+        IMG_Quit();
+        SDL_DestroyRenderer(renderer);
+        SDL_DestroyWindow(ventana);
+        SDL_Quit();
+        return 1;
+    }
 
     // Bucle para mantener la ventana abierta
     int ejecutando = 1;
@@ -43,24 +72,19 @@ int main(int argc, char* argv[]) {
                 ejecutando = 0;
             }
         }
-
-        // Establecer color de renderizado (blanco)
         SDL_SetRenderDrawColor(renderer, 0, 255, 255, 255);
-
-        // Limpiar la pantalla con el color establecido
         SDL_RenderClear(renderer);
-
-        // Presentar el renderizador en pantalla
+        SDL_RenderCopy(renderer, texture, NULL, NULL);
         SDL_RenderPresent(renderer);
-
-        SDL_Delay(16); // Pequeño retraso para evitar uso excesivo de CPU
+        SDL_Delay(16);
     }
 
     // Limpiar y cerrar SDL
+    SDL_DestroyTexture(texture);
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(ventana);
     SDL_Quit();
-
+    IMG_Quit();
     return 0;
 }
 
