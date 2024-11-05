@@ -9,7 +9,6 @@ int main(int argc, char* argv[]) {
         printf("Error al inicializar SDL: %s\n", SDL_GetError());
         return 1;
     }
-
     // Crear una ventana
     SDL_Window* ventana = SDL_CreateWindow(
         "Pac-Man",                // Título de la ventana
@@ -42,7 +41,7 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
-    SDL_Surface* surface = IMG_Load("img/dios.jpg");
+    SDL_Surface* surface = IMG_Load("img/pacman.jpg");
     if (!surface) {
         printf("Error al cargar la imagen: %s\n", IMG_GetError());
         IMG_Quit();
@@ -72,7 +71,7 @@ int main(int argc, char* argv[]) {
                 ejecutando = 0;
             }
         }
-        SDL_SetRenderDrawColor(renderer, 0, 255, 255, 255);
+        SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
         SDL_RenderClear(renderer);
         SDL_RenderCopy(renderer, texture, NULL, NULL);
         SDL_RenderPresent(renderer);
