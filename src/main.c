@@ -78,7 +78,7 @@ int main(int argc, char* argv[]) {
         return -1;
     }
 
-    Mix_Music *music = Mix_LoadMUS("audio/fondo.mp3");
+    Mix_Music *music = Mix_LoadMUS("audio/intro.mp3");
     if (!music) {
         printf("No se pudo cargar la música: %s\n", Mix_GetError());
         return -1;
