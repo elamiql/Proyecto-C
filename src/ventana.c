@@ -5,36 +5,57 @@
 #include "audio.h"
 #include "funciones.h"
 
-void renderTablero(int **tablero, SDL_Window* initWindow, SDL_Renderer* renderer){
+void renderTablero(int **tablero, SDL_Window* initWindow, SDL_Renderer* renderer, SDL_Texture *pillChica, SDL_Texture *superPill){
 
     //necesito que la mierda de tablero se ajuste a la pantalla, asi que tengo que dividir segun el tamaño blabla
     
     int f = tamanoFilas(tablero);
     int c = tamanoColumnas(tablero);
-    int anchoCelda = 538 / c;
-    int altoCelda = 691 / f;
-    int offsetY=45;
+    int anchoCelda = 560 / c;
+    int altoCelda = 560 / f;
+    int offsetY = 45;
+
+    if (!pillChica){
+        printf("Error al cargar las texturas: %s", SDL_GetError());
+        return;
+    }
+
+    if (!superPill){
+        printf("Error al cargar las texturas: %s", SDL_GetError());
+        return;
+    }
+
 
     for (int i = 0; i < f; i++) {
         for (int j = 0; j < c; j++) {
             SDL_Rect celda = {j * anchoCelda, i * altoCelda + offsetY, anchoCelda, altoCelda};
 
             // Cambiar el color dependiendo del valor de la celda
-            if (tablero[i][j] == 0 ){
-                SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+            // 0 = vacio, 1 = muro, 2 = pill chica, 3 = pill grande, 4 = cherry, ... etc,
+
+            SDL_Texture *texturaActual = NULL;
+
+            if (tablero[i][j] == 2){
+                texturaActual = pillChica;
             }
-            else if (tablero[i][j] == 1) {
-                SDL_SetRenderDrawColor(renderer, 0, 0, 128, 255);
-            } 
-            else if (tablero[i][j] == 2){
-                SDL_SetRenderDrawColor(renderer, 255, 255, 0, 255);
+            else if(tablero[i][j] == 3){
+                texturaActual = superPill;
+            }
+            if (texturaActual != NULL) {
+                SDL_RenderCopy(renderer, texturaActual, NULL, &celda);
             }
 
-            // Dibujar la celda
-            SDL_RenderFillRect(renderer, &celda);
+            else{
+                // Si no hay textura, renderizar un color de fondo
+                if (tablero[i][j] == 0) {
+                    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255); // Negro
+                } else if (tablero[i][j] == 1) {
+                    SDL_SetRenderDrawColor(renderer, 25, 25, 166, 255); // Azul
+                }
+                SDL_RenderFillRect(renderer, &celda);
+            }
         }
     }
-    SDL_RenderPresent(renderer);
 }
 
 void renderText(SDL_Renderer *renderer, TTF_Font *font, const char *text, int x, int y){
@@ -54,11 +75,36 @@ void renderText(SDL_Renderer *renderer, TTF_Font *font, const char *text, int x,
     SDL_DestroyTexture(texture);
 }
 
+void imagenVidas(SDL_Window *ventana, SDL_Renderer *renderer, SDL_Texture *pacmanReverseT, int vidas) {
+    // Asegurarse de que la textura no sea NULL
+    if (!pacmanReverseT) {
+        printf("Error al cargar la textura pacmanReverse: %s\n", IMG_GetError());
+        SDL_DestroyRenderer(renderer);
+        SDL_DestroyWindow(ventana);
+        SDL_Quit();
+        return;
+    }
+
+    // Definir el tamaño de la imagen
+    SDL_Rect rectpacmanReverse;
+    rectpacmanReverse.w = 20;  // Ancho de la imagen
+    rectpacmanReverse.h = 20;  // Altura de la imagen
+
+    // Bucle para dibujar las vidas
+    for (int i = 0; i < vidas; i++) {
+        // Establecer la posición de cada imagen de vida
+        rectpacmanReverse.x = 30 + (i * (rectpacmanReverse.w + 5));  // Espaciado entre las imágenes
+        rectpacmanReverse.y = 603;  // Coloca las imágenes en la parte inferior de la ventana
+
+        // Renderizar la imagen en la posición correspondiente
+        SDL_RenderCopy(renderer, pacmanReverseT, NULL, &rectpacmanReverse);
+    }
+}
 
 void ventanaPrincipal(int **tablero, Uint32 flags) {
     const char *titulo = "Pac-man";
-    int anchoP = 532;
-    int altoP = 750;
+    int anchoP = 560;
+    int altoP = 630;
 
     if (SDL_Init(SDL_INIT_VIDEO) < 0) {
         printf("Error al inicializar SDL: %s\n", SDL_GetError());
@@ -97,6 +143,35 @@ void ventanaPrincipal(int **tablero, Uint32 flags) {
         SDL_Quit();
         return;
     }
+    
+    SDL_Texture *pillChica = IMG_LoadTexture(renderer,"img/pillChica.png");
+    if (!pillChica) {
+        printf("Error al cargar la textura pillChica: %s\n", IMG_GetError());
+        SDL_DestroyRenderer(renderer);
+        SDL_DestroyWindow(ventana);
+        SDL_Quit();
+        return;
+    }
+
+    SDL_Texture *superPill = IMG_LoadTexture(renderer, "img/superpill.png");
+
+    if (!superPill) {
+        printf("Error al cargar la textura pillChica: %s\n", IMG_GetError());
+        SDL_DestroyRenderer(renderer);
+        SDL_DestroyWindow(ventana);
+        SDL_Quit();
+        return;
+    }
+
+    SDL_Texture *pacmanReverse = IMG_LoadTexture(renderer, "img/pacmanreveres.png");
+
+    if (!pacmanReverse) {
+        printf("Error al cargar la textura pillChica: %s\n", IMG_GetError());
+        SDL_DestroyRenderer(renderer);
+        SDL_DestroyWindow(ventana);
+        SDL_Quit();
+        return;
+    }
 
     TTF_Font *font = TTF_OpenFont("font/ARCADECLASSIC.ttf", 24);
     if (font == NULL) {
@@ -110,6 +185,7 @@ void ventanaPrincipal(int **tablero, Uint32 flags) {
 
     int HIGH_SCORE = 0;
     int ejecutando = 1;
+    int vidas = 5;
     SDL_Event evento;
     SDL_SetWindowIcon(ventana, iconSurface);
 
@@ -127,7 +203,10 @@ void ventanaPrincipal(int **tablero, Uint32 flags) {
         snprintf(texto, sizeof(texto), "%d", HIGH_SCORE);
 
 
-        renderTablero(tablero, ventana, renderer);
+        renderTablero(tablero, ventana, renderer, pillChica, superPill);
+        imagenVidas(ventana, renderer, pacmanReverse, vidas);
+
+
         renderText(renderer, font, "1 UP", 20, 0);
         renderText(renderer, font, "HIGH SCORE", (anchoP - 110)/2, 0);
 
@@ -137,11 +216,15 @@ void ventanaPrincipal(int **tablero, Uint32 flags) {
         HIGH_SCORE++;
 
         SDL_RenderPresent(renderer);
-        SDL_Delay(16);
+        SDL_Delay(3000);
+        vidas--;
     }
 
+    //Liberar la textura después de usarla
+    //Clean
 
-    //clean
+    SDL_DestroyTexture(pacmanReverse);
+    SDL_DestroyTexture(pillChica);
     TTF_CloseFont(font);
     SDL_FreeSurface(iconSurface);
     SDL_DestroyRenderer(renderer);

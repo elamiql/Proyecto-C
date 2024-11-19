@@ -21,7 +21,8 @@ int intro(){
     if (music == NULL) {
         printf("Error al cargar música: %s\n", Mix_GetError());
     return -1;
-}
+    }
+    
     if (!music) {
         printf("Error al cargar archivos de audio: %s\n", Mix_GetError());
         Mix_CloseAudio();
