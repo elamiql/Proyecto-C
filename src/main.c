@@ -16,7 +16,6 @@ int main(){
     //por simplicidad se asume en la matriz 0=celda vacia, 1=celda con punto, 2=muro
 
     ventanaPrincipal(tablero, SDL_WINDOW_SHOWN);
-    imprimeMatriz(tablero);
     printf("filas = %d, columnas = %d\n", filas, columnas);
     liberarMatriz(tablero);
 
