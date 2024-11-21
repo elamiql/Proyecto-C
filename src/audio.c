@@ -3,48 +3,45 @@
 #include <SDL2/SDL_mixer.h>
 #include <stdio.h>
 
-int intro(){
-
-    //Funciones para tomar errores
-
+void intro(const char *archivo_audio) {
+    // Inicializar SDL
     if (SDL_Init(SDL_INIT_AUDIO) < 0) {
         printf("Error al inicializar SDL: %s\n", SDL_GetError());
-        return -1;
+        return;
     }
- 
-    if (Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 2048) < 0) {
+
+    // Inicializar SDL_mixer
+    if (Mix_Init(MIX_INIT_MP3) == 0) {
         printf("Error al inicializar SDL_mixer: %s\n", Mix_GetError());
-        return -1;
-    }
-
-    Mix_Music *music = Mix_LoadMUS("audio/intro.mp3");
-    if (music == NULL) {
-        printf("Error al cargar música: %s\n", Mix_GetError());
-    return -1;
-    }
-    
-    if (!music) {
-        printf("Error al cargar archivos de audio: %s\n", Mix_GetError());
-        Mix_CloseAudio();
         SDL_Quit();
-        return -1;
+        return;
     }
 
-    // Reproducir música
-    Mix_PlayMusic(music, -1);
+    // Abrir el mezclador de audio con parámetros predeterminados
+    if (Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 2048) < 0) {
+        printf("Error al abrir el audio: %s\n", Mix_GetError());
+        Mix_Quit();
+        SDL_Quit();
+        return;
+    }
 
-    // Aumentar el volumen de la música al 75%
-    Mix_VolumeMusic(96);
+    // Cargar el archivo de música
+    Mix_Music *musica = Mix_LoadMUS(archivo_audio);
+    if (musica == NULL) {
+        printf("Error al cargar la música: %s\n", Mix_GetError());
+        Mix_CloseAudio();
+        Mix_Quit();
+        SDL_Quit();
+        return;
+    }
 
-    // Establecer el volumen de los efectos de sonido al 50%
-    Mix_Volume(-1, 64);
-
-    // Esperar para que el sonido se reproduzca
-    SDL_Delay(5000);
-
-    // Limpiar y cerrar
-    Mix_FreeMusic(music);
-    Mix_CloseAudio();
-    SDL_Quit();
-
+    // Reproducir la música una vez
+    if (Mix_PlayMusic(musica, 1) == -1) {
+        printf("Error al reproducir música: %s\n", Mix_GetError());
+        Mix_FreeMusic(musica);
+        Mix_CloseAudio();
+        Mix_Quit();
+        SDL_Quit();
+        return;
+    }
 }

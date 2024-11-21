@@ -66,7 +66,7 @@ int** leeTablero(char *filename) {
 void imprimeMatriz(int **tableroMatriz) {
     for (int i = 0; i < filas; i++) {
         for (int j = 0; j < columnas; j++) {
-            printf("%d ", tableroMatriz[i][j]);
+            printf("%2d ", tableroMatriz[i][j]);
         }
         printf("\n");
     }

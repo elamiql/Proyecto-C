@@ -4,6 +4,6 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_mixer.h>
 
-int intro();
+void intro();
 
 #endif

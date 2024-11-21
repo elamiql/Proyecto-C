@@ -1,9 +1,20 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
 #include <SDL2/SDL_ttf.h>
+#include <SDL2/SDL_mixer.h>
 #include <stdio.h>
+#include <stdbool.h>
 #include "audio.h"
 #include "funciones.h"
+
+
+SDL_Texture* cargarTextura(SDL_Renderer* renderer, const char* ruta) {
+    SDL_Texture* textura = IMG_LoadTexture(renderer, ruta);
+    if (!textura) {
+        printf("Error al cargar la textura %s: %s\n", ruta, IMG_GetError());
+    }
+    return textura;
+}
 
 void renderTablero(int **tablero, SDL_Window* initWindow, SDL_Renderer* renderer, SDL_Texture *pillChica, SDL_Texture *superPill, SDL_Texture *esqAbIzq, SDL_Texture *muroAb, SDL_Texture *muroIzq, SDL_Texture *muroDer, SDL_Texture *muroArriba, SDL_Texture *esqArribaIzq, SDL_Texture *esqArribaDer, SDL_Texture *esqAbDer, SDL_Texture *esq1, SDL_Texture *esq2, SDL_Texture *esq3, SDL_Texture *esq4, SDL_Texture *muroVert1, SDL_Texture *muroVert2, SDL_Texture *muroHor1, SDL_Texture *muroHor2, SDL_Texture *esq4_2, SDL_Texture *esq3_2, SDL_Texture *esq1_2, SDL_Texture *esq2_2, SDL_Texture *interseccion1, SDL_Texture *interseccion2, SDL_Texture *interseccion3, SDL_Texture *interseccion4, SDL_Texture *interseccion5, SDL_Texture *interseccion6, SDL_Texture *esq90g1, SDL_Texture *esq90g2, SDL_Texture *esq90g3, SDL_Texture *esq90g4, SDL_Texture *borde1, SDL_Texture *borde2, SDL_Texture *rosado){
 
@@ -130,6 +141,7 @@ void renderTablero(int **tablero, SDL_Window* initWindow, SDL_Renderer* renderer
                 SDL_RenderCopy(renderer, texturaActual, NULL, &celda);
             }
             else{
+
                 // Si no hay textura, renderizar un color de fondo
                 if (tablero[i][j] == 0) {
                     SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255); // Negro
@@ -141,6 +153,7 @@ void renderTablero(int **tablero, SDL_Window* initWindow, SDL_Renderer* renderer
         }
     }
 }
+
 
 void renderText(SDL_Renderer *renderer, TTF_Font *font, const char *text, int x, int y){
     SDL_Color color = {255, 255, 255};
@@ -160,7 +173,7 @@ void renderText(SDL_Renderer *renderer, TTF_Font *font, const char *text, int x,
 }
 
 void imagenVidas(SDL_Window *ventana, SDL_Renderer *renderer, SDL_Texture *pacmanReverseT, int vidas) {
-    // Asegurarse de que la textura no sea NULL
+
     if (!pacmanReverseT) {
         printf("Error al cargar la textura pacmanReverse: %s\n", IMG_GetError());
         SDL_DestroyRenderer(renderer);
@@ -170,27 +183,94 @@ void imagenVidas(SDL_Window *ventana, SDL_Renderer *renderer, SDL_Texture *pacma
     }
 
     SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "0");
-    // Definir el tamaño de la imagen
     SDL_Rect rectpacmanReverse;
-    rectpacmanReverse.w = 24;  // Ancho de la imagen
-    rectpacmanReverse.h = 24;  // Altura de la imagen
+    rectpacmanReverse.w = 24; 
+    rectpacmanReverse.h = 24;
 
-    // Bucle para dibujar las vidas
     for (int i = 0; i < vidas; i++) {
-        // Establecer la posición de cada imagen de vida
-        rectpacmanReverse.x = 30 + (i * (rectpacmanReverse.w + 5));  // Espaciado entre las imágenes
-        rectpacmanReverse.y = 550;  // Coloca las imágenes en la parte inferior de la ventana
+        rectpacmanReverse.x = 30 + (i * (rectpacmanReverse.w + 5)); 
+        rectpacmanReverse.y = 550;
 
-        // Renderizar la imagen en la posición correspondiente
         SDL_RenderCopy(renderer, pacmanReverseT, NULL, &rectpacmanReverse);
     }
 }
 
-void ventanaPrincipal(int **tablero, Uint32 flags) {
+bool ventanaInicio(SDL_Renderer* renderer, TTF_Font *font) {
+    int anchoP = 480;
+    int altoP = 580;
+
+    SDL_Event evento;
+    bool ejecutando = true;
+    SDL_Color colorTexto = {255, 255, 255};
+    
+    const char* mensajeInicio = "Presione cualquier boton para comenzar";
+    
+    int contadorParpadeo = 0;
+    bool mostrarTexto = true;
+    
+    SDL_Texture *fondo = cargarTextura(renderer, "img/logoInicio2.png");
+
+    while (ejecutando) {
+        while (SDL_PollEvent(&evento)) {
+            if (evento.type == SDL_QUIT) {
+                ejecutando = false;
+            }
+            if (evento.type == SDL_KEYDOWN || evento.type == SDL_MOUSEBUTTONDOWN) {
+                intro("audio/intro.mp3");
+                return true;
+            }
+        }
+        
+        SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255); // Fondo negro
+        SDL_RenderClear(renderer);
+        
+        if (fondo != NULL) {
+            SDL_Rect rectFondo = {15, 70, 226*2, 59*2};  // Usar todo el tamaño de la ventana para el fondo
+            SDL_RenderCopy(renderer, fondo, NULL, &rectFondo);
+        }
+
+        // Control de parpadeo
+        contadorParpadeo++;
+        if (contadorParpadeo >= 15) { // Cada 30 ciclos (aproximadamente 500ms)
+            contadorParpadeo = 0;
+            mostrarTexto = !mostrarTexto; // Alterna entre mostrar y ocultar el texto
+        }
+
+        // Si mostrarTexto es true, renderizamos el mensaje
+        if (mostrarTexto) {
+            SDL_Surface *surface = TTF_RenderText_Solid(font, mensajeInicio, colorTexto);
+            if (surface == NULL) {
+                printf("Error al crear la superficie de texto: %s\n", TTF_GetError());
+                return false;
+            }
+
+            SDL_Texture *textura = SDL_CreateTextureFromSurface(renderer, surface);
+            SDL_FreeSurface(surface);
+
+            // Obtener el tamaño del texto
+            SDL_Rect destRect = { (anchoP - surface->w) / 2, altoP - 40, surface->w, surface->h };
+
+            // Renderizar el texto
+            SDL_RenderCopy(renderer, textura, NULL, &destRect);
+            SDL_DestroyTexture(textura);
+        }
+
+        // Mostrar lo renderizado
+        SDL_RenderPresent(renderer);
+
+        // Esperar un poco antes de la siguiente iteración
+        SDL_Delay(16); // Controla la velocidad del parpadeo
+    }
+
+    SDL_DestroyTexture(fondo);  // Liberar la textura del fondo
+    return false; // Si no se presiona nada, se sigue mostrando la ventana de inicio
+}
+
+void ventanaJuego(int **tablero) {
     const char *titulo = "Pac-man";
     int anchoP = 480;
     int altoP = 580;
-    SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "0");
+    
     if (SDL_Init(SDL_INIT_VIDEO) < 0) {
         printf("Error al inicializar SDL: %s\n", SDL_GetError());
         return;
@@ -205,7 +285,7 @@ void ventanaPrincipal(int **tablero, Uint32 flags) {
         return;
     }
 
-    SDL_Window* ventana = SDL_CreateWindow(titulo, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, anchoP, altoP, flags);
+    SDL_Window* ventana = SDL_CreateWindow(titulo, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, anchoP, altoP, SDL_WINDOW_SHOWN);
     if (!ventana) {
         printf("Error al crear la ventana: %s\n", SDL_GetError());
         SDL_Quit();
@@ -220,387 +300,48 @@ void ventanaPrincipal(int **tablero, Uint32 flags) {
         return;
     }
 
-    SDL_Surface *iconSurface = IMG_Load("img/Pacman.png"); // Asegúrate de que la ruta sea correcta
-    if (!iconSurface) {
-        printf("No se pudo cargar la imagen del icono: %s\n", IMG_GetError());
-        SDL_DestroyWindow(ventana);
-        IMG_Quit();
-        SDL_Quit();
-        return;
+    SDL_Surface *iconSurface = IMG_Load("img/Pacman.png");
+    if (iconSurface == NULL) {
+        printf("Error al cargar la imagen: %s\n", IMG_GetError());
     }
-    
-    SDL_Texture *pillChica = IMG_LoadTexture(renderer,"img/pillChica.png");
-    if (!pillChica) {
-        printf("Error al cargar la textura pillChica: %s\n", IMG_GetError());
-        SDL_DestroyRenderer(renderer);
-        SDL_DestroyWindow(ventana);
-        SDL_Quit();
-        return;
-    }
-
-    SDL_Texture *superPill = IMG_LoadTexture(renderer, "img/superpill.png");
-
-    if (!superPill) {
-        printf("Error al cargar la textura superPill: %s\n", IMG_GetError());
-        SDL_DestroyRenderer(renderer);
-        SDL_DestroyWindow(ventana);
-        SDL_Quit();
-        return;
-    }
-
-    SDL_Texture *pacmanReverse = IMG_LoadTexture(renderer, "img/pacmanreveres.png");
-
-    if (!pacmanReverse) {
-        printf("Error al cargar la textura pacmanReverse: %s\n", IMG_GetError());
-        SDL_DestroyRenderer(renderer);
-        SDL_DestroyWindow(ventana);
-        SDL_Quit();
-        return;
-    }
-
-    SDL_Texture *esqAbIzq = IMG_LoadTexture(renderer, "img/esquinasAbajoIzq.png");
-    if (!esqAbIzq) {
-        printf("Error al cargar la textura esqAbIzq: %s\n", IMG_GetError());
-        SDL_DestroyRenderer(renderer);
-        SDL_DestroyWindow(ventana);
-        SDL_Quit();
-        return;
-    }
-
-    SDL_Texture *muroAb = IMG_LoadTexture(renderer, "img/muroAbajo.png");
-    if (!muroAb) {
-        printf("Error al cargar la textura muroAbajo: %s\n", IMG_GetError());
-        SDL_DestroyRenderer(renderer);
-        SDL_DestroyWindow(ventana);
-        SDL_Quit();
-        return;
-    }
-
-    SDL_Texture *muroIzq = IMG_LoadTexture(renderer, "img/muroIzq.png");
-    if (!muroIzq) {
-        printf("Error al cargar la textura muroIzq: %s\n", IMG_GetError());
-        SDL_DestroyRenderer(renderer);
-        SDL_DestroyWindow(ventana);
-        SDL_Quit();
-        return;
-    }
-
-    SDL_Texture *muroDer = IMG_LoadTexture(renderer, "img/muroDerecha.png");
-
-    if (!muroDer) {
-        printf("Error al cargar la textura muroIzq: %s\n", IMG_GetError());
-        SDL_DestroyRenderer(renderer);
-        SDL_DestroyWindow(ventana);
-        SDL_Quit();
-        return;
-    }
-
-    SDL_Texture *muroArriba = IMG_LoadTexture(renderer, "img/muroArriba.png");
-
-    if (!muroArriba) {
-        printf("Error al cargar la textura muroArriba: %s\n", IMG_GetError());
-        SDL_DestroyRenderer(renderer);
-        SDL_DestroyWindow(ventana);
-        SDL_Quit();
-        return;
-    }
-    
-    SDL_Texture *esqArribaIzq = IMG_LoadTexture(renderer, "img/esquinaArribaIzq.png");
-
-    if (!muroArriba) {
-        printf("Error al cargar la textura esqArribaIzq: %s\n", IMG_GetError());
-        SDL_DestroyRenderer(renderer);
-        SDL_DestroyWindow(ventana);
-        SDL_Quit();
-        return;
-    }
-
-    SDL_Texture *esqArribaDer = IMG_LoadTexture(renderer, "img/esquinaArribaDer.png");
-
-    if (!esqArribaDer) {
-        printf("Error al cargar la textura esqArribaDer: %s\n", IMG_GetError());
-        SDL_DestroyRenderer(renderer);
-        SDL_DestroyWindow(ventana);
-        SDL_Quit();
-        return;
-    }
-
-    SDL_Texture *esqAbDer = IMG_LoadTexture(renderer, "img/esqAbDer.png");
-
-    if (!esqAbDer) {
-        printf("Error al cargar la textura esqAbDer: %s\n", IMG_GetError());
-        SDL_DestroyRenderer(renderer);
-        SDL_DestroyWindow(ventana);
-        SDL_Quit();
-        return;
-    }
-
-    SDL_Texture *esq1 = IMG_LoadTexture(renderer, "img/esq1.png");
-
-    if (!esq1) {
-        printf("Error al cargar la textura esq1: %s\n", IMG_GetError());
-        SDL_DestroyRenderer(renderer);
-        SDL_DestroyWindow(ventana);
-        SDL_Quit();
-        return;
-    }
-
-    SDL_Texture *esq2 = IMG_LoadTexture(renderer, "img/esq2.png");
-
-    if (!esq2) {
-        printf("Error al cargar la textura esq2: %s\n", IMG_GetError());
-        SDL_DestroyRenderer(renderer);
-        SDL_DestroyWindow(ventana);
-        SDL_Quit();
-        return;
-    }
-    
-    SDL_Texture *esq3 = IMG_LoadTexture(renderer, "img/esq3.png");
-
-    if (!esq3) {
-        printf("Error al cargar la textura esq3: %s\n", IMG_GetError());
-        SDL_DestroyRenderer(renderer);
-        SDL_DestroyWindow(ventana);
-        SDL_Quit();
-        return;
-    }
-    
-    SDL_Texture *esq4 = IMG_LoadTexture(renderer, "img/esq4.png");
-
-    if (!esq4) {
-        printf("Error al cargar la textura esq4: %s\n", IMG_GetError());
-        SDL_DestroyRenderer(renderer);
-        SDL_DestroyWindow(ventana);
-        SDL_Quit();
-        return;
-    }
-
-    SDL_Texture *muroVert1 = IMG_LoadTexture(renderer, "img/muroVert1.png");
-
-    if (!muroVert1) {
-        printf("Error al cargar la textura muroVert1: %s\n", IMG_GetError());
-        SDL_DestroyRenderer(renderer);
-        SDL_DestroyWindow(ventana);
-        SDL_Quit();
-        return;
-    }
-
-    SDL_Texture *muroVert2 = IMG_LoadTexture(renderer, "img/muroVert2.png");
-
-    if (!muroVert2) {
-        printf("Error al cargar la textura muroVert2: %s\n", IMG_GetError());
-        SDL_DestroyRenderer(renderer);
-        SDL_DestroyWindow(ventana);
-        SDL_Quit();
-        return;
-    }
-
-    SDL_Texture *muroHor1 = IMG_LoadTexture(renderer, "img/muroHor1.png");
-
-    if (!muroHor1) {
-        printf("Error al cargar la textura muroHor1: %s\n", IMG_GetError());
-        SDL_DestroyRenderer(renderer);
-        SDL_DestroyWindow(ventana);
-        SDL_Quit();
-        return;
-    }
-
-    SDL_Texture *muroHor2 = IMG_LoadTexture(renderer, "img/muroHor2.png");
-
-    if (!muroHor2) {
-        printf("Error al cargar la textura muroHor2: %s\n", IMG_GetError());
-        SDL_DestroyRenderer(renderer);
-        SDL_DestroyWindow(ventana);
-        SDL_Quit();
-        return;
-    }
-
-    SDL_Texture *esq4_2 = IMG_LoadTexture(renderer, "img/esq4_2.png");
-
-    if (!esq4_2) {
-        printf("Error al cargar la textura esq4_2: %s\n", IMG_GetError());
-        SDL_DestroyRenderer(renderer);
-        SDL_DestroyWindow(ventana);
-        SDL_Quit();
-        return;
-    }
-    
-    SDL_Texture *esq3_2 = IMG_LoadTexture(renderer, "img/esq3_2.png");
-
-    if (!esq3_2) {
-        printf("Error al cargar la textura esq3_2: %s\n", IMG_GetError());
-        SDL_DestroyRenderer(renderer);
-        SDL_DestroyWindow(ventana);
-        SDL_Quit();
-        return;
-    }
-    
-    SDL_Texture *esq1_2 = IMG_LoadTexture(renderer, "img/esq1_2.png");
-
-    if (!esq1_2) {
-        printf("Error al cargar la textura esq1_2: %s\n", IMG_GetError());
-        SDL_DestroyRenderer(renderer);
-        SDL_DestroyWindow(ventana);
-        SDL_Quit();
-        return;
-    }
-    
-    SDL_Texture *esq2_2 = IMG_LoadTexture(renderer, "img/esq2_2.png");
-
-    if (!esq2_2) {
-        printf("Error al cargar la textura esq2_2: %s\n", IMG_GetError());
-        SDL_DestroyRenderer(renderer);
-        SDL_DestroyWindow(ventana);
-        SDL_Quit();
-        return;
-    }
-
-    SDL_Texture *interseccion1 = IMG_LoadTexture(renderer, "img/interseccion1.png");
-
-    if (!interseccion1) {
-        printf("Error al cargar la textura interseccion1: %s\n", IMG_GetError());
-        SDL_DestroyRenderer(renderer);
-        SDL_DestroyWindow(ventana);
-        SDL_Quit();
-        return;
-    }
-
-    SDL_Texture *interseccion2 = IMG_LoadTexture(renderer, "img/interseccion2.png");
-
-    if (!interseccion2) {
-        printf("Error al cargar la textura interseccion2: %s\n", IMG_GetError());
-        SDL_DestroyRenderer(renderer);
-        SDL_DestroyWindow(ventana);
-        SDL_Quit();
-        return;
-    }
-
-    SDL_Texture *interseccion3 = IMG_LoadTexture(renderer, "img/interseccion3.png");
-
-    if (!interseccion3) {
-        printf("Error al cargar la textura interseccion3: %s\n", IMG_GetError());
-        SDL_DestroyRenderer(renderer);
-        SDL_DestroyWindow(ventana);
-        SDL_Quit();
-        return;
-    }
-
-    SDL_Texture *interseccion4 = IMG_LoadTexture(renderer, "img/interseccion4.png");
-
-    if (!interseccion4) {
-        printf("Error al cargar la textura interseccion4: %s\n", IMG_GetError());
-        SDL_DestroyRenderer(renderer);
-        SDL_DestroyWindow(ventana);
-        SDL_Quit();
-        return;
-    }
-
-    SDL_Texture *interseccion5 = IMG_LoadTexture(renderer, "img/interseccion5.png");
-
-    if (!interseccion5) {
-        printf("Error al cargar la textura interseccion5: %s\n", IMG_GetError());
-        SDL_DestroyRenderer(renderer);
-        SDL_DestroyWindow(ventana);
-        SDL_Quit();
-        return;
-    }
-
-    SDL_Texture *interseccion6 = IMG_LoadTexture(renderer, "img/interseccion6.png");
-
-    if (!interseccion6) {
-        printf("Error al cargar la textura interseccion6: %s\n", IMG_GetError());
-        SDL_DestroyRenderer(renderer);
-        SDL_DestroyWindow(ventana);
-        SDL_Quit();
-        return;
-    }
-
-    SDL_Texture *esq90g1 = IMG_LoadTexture(renderer, "img/esq90g1.png");
-
-    if (!esq90g1) {
-        printf("Error al cargar la textura esq90g1: %s\n", IMG_GetError());
-        SDL_DestroyRenderer(renderer);
-        SDL_DestroyWindow(ventana);
-        SDL_Quit();
-        return;
-    }
-
-    SDL_Texture *esq90g2 = IMG_LoadTexture(renderer, "img/esq90g2.png");
-
-    if (!esq90g2) {
-        printf("Error al cargar la textura esq90g2: %s\n", IMG_GetError());
-        SDL_DestroyRenderer(renderer);
-        SDL_DestroyWindow(ventana);
-        SDL_Quit();
-        return;
-    }
-
-    SDL_Texture *esq90g3 = IMG_LoadTexture(renderer, "img/esq90g3.png");
-
-    if (!esq90g3) {
-        printf("Error al cargar la textura esq90g3: %s\n", IMG_GetError());
-        SDL_DestroyRenderer(renderer);
-        SDL_DestroyWindow(ventana);
-        SDL_Quit();
-        return;
-    }
-
-    SDL_Texture *esq90g4 = IMG_LoadTexture(renderer, "img/esq90g4.png");
-
-    if (!esq90g4) {
-        printf("Error al cargar la textura esq90g4: %s\n", IMG_GetError());
-        SDL_DestroyRenderer(renderer);
-        SDL_DestroyWindow(ventana);
-        SDL_Quit();
-        return;
-    }
-
-    SDL_Texture *borde1 = IMG_LoadTexture(renderer, "img/borde1.png");
-
-    if (!borde1) {
-        printf("Error al cargar la textura borde1: %s\n", IMG_GetError());
-        SDL_DestroyRenderer(renderer);
-        SDL_DestroyWindow(ventana);
-        SDL_Quit();
-        return;
-    }
-
-    SDL_Texture *borde2 = IMG_LoadTexture(renderer, "img/borde2.png");
-
-    if (!borde2) {
-        printf("Error al cargar la textura borde2: %s\n", IMG_GetError());
-        SDL_DestroyRenderer(renderer);
-        SDL_DestroyWindow(ventana);
-        SDL_Quit();
-        return;
-    }
-
-    SDL_Texture *rosado = IMG_LoadTexture(renderer, "img/rosado.png");
-
-    if (!rosado) {
-        printf("Error al cargar la textura rosado: %s\n", IMG_GetError());
-        SDL_DestroyRenderer(renderer);
-        SDL_DestroyWindow(ventana);
-        SDL_Quit();
-        return;
-    }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    // Cargamos todas las texturas para renderizar en el tablero
+
+    SDL_Texture *pillChica = cargarTextura(renderer, "img/pillChica.png");
+    SDL_Texture *superPill = cargarTextura(renderer, "img/superpill.png");
+    SDL_Texture *pacmanReverse = cargarTextura(renderer, "img/pacmanreveres.png");
+    SDL_Texture *esqAbIzq = cargarTextura(renderer, "img/esquinasAbajoIzq.png");
+    SDL_Texture *muroAb = cargarTextura(renderer, "img/muroAbajo.png");
+    SDL_Texture *muroIzq = cargarTextura(renderer, "img/muroIzq.png");
+    SDL_Texture *muroDer = cargarTextura(renderer, "img/muroDerecha.png");
+    SDL_Texture *muroArriba = cargarTextura(renderer, "img/muroArriba.png");
+    SDL_Texture *esqArribaIzq = cargarTextura(renderer, "img/esquinaArribaIzq.png");
+    SDL_Texture *esqArribaDer = cargarTextura(renderer, "img/esquinaArribaDer.png");
+    SDL_Texture *esqAbDer = cargarTextura(renderer, "img/esqAbDer.png");
+    SDL_Texture *esq1 = cargarTextura(renderer, "img/esq1.png");
+    SDL_Texture *esq2 = cargarTextura(renderer, "img/esq2.png");
+    SDL_Texture *esq3 = cargarTextura(renderer, "img/esq3.png");
+    SDL_Texture *esq4 = cargarTextura(renderer, "img/esq4.png");
+    SDL_Texture *muroVert1 = cargarTextura(renderer, "img/muroVert1.png");
+    SDL_Texture *muroVert2 = cargarTextura(renderer, "img/muroVert2.png");
+    SDL_Texture *muroHor1 = cargarTextura(renderer, "img/muroHor1.png");
+    SDL_Texture *muroHor2 = cargarTextura(renderer, "img/muroHor2.png");
+    SDL_Texture *esq4_2 = cargarTextura(renderer, "img/esq4_2.png");
+    SDL_Texture *esq3_2 = cargarTextura(renderer, "img/esq3_2.png");
+    SDL_Texture *esq1_2 = cargarTextura(renderer, "img/esq1_2.png");
+    SDL_Texture *esq2_2 = cargarTextura(renderer, "img/esq2_2.png");
+    SDL_Texture *interseccion1 = cargarTextura(renderer, "img/interseccion1.png");
+    SDL_Texture *interseccion2 = cargarTextura(renderer, "img/interseccion2.png");
+    SDL_Texture *interseccion3 = cargarTextura(renderer, "img/interseccion3.png");
+    SDL_Texture *interseccion4 = cargarTextura(renderer, "img/interseccion4.png");
+    SDL_Texture *interseccion5 = cargarTextura(renderer, "img/interseccion5.png");
+    SDL_Texture *interseccion6 = cargarTextura(renderer, "img/interseccion6.png");
+    SDL_Texture *esq90g1 = cargarTextura(renderer, "img/esq90g1.png");
+    SDL_Texture *esq90g2 = cargarTextura(renderer, "img/esq90g2.png");
+    SDL_Texture *esq90g3 = cargarTextura(renderer, "img/esq90g3.png");
+    SDL_Texture *esq90g4 = cargarTextura(renderer, "img/esq90g4.png");
+    SDL_Texture *borde1 = cargarTextura(renderer, "img/borde1.png");
+    SDL_Texture *borde2 = cargarTextura(renderer, "img/borde2.png");
+    SDL_Texture *rosado = cargarTextura(renderer, "img/rosado.png");
 
     TTF_Font *font = TTF_OpenFont("font/ARCADECLASSIC.ttf", 24);
     if (font == NULL) {
@@ -608,33 +349,33 @@ void ventanaPrincipal(int **tablero, Uint32 flags) {
         return;
     }
 
-
-
     // Bucle principal
 
     int HIGH_SCORE = 9999;
     int ejecutando = 1;
     int vidas = 4;
-    SDL_Event evento;
     SDL_SetWindowIcon(ventana, iconSurface);
 
+    if (!ventanaInicio(renderer, font)) {
+        // Si no se presiona ninguna tecla o botón, salimos del juego
+        SDL_Quit();
+        return;
+    }
+    SDL_Event evento;
     while (ejecutando) {
         while (SDL_PollEvent(&evento)) {
             if (evento.type == SDL_QUIT) {
                 ejecutando = 0;
             }
         }
-
         SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
         SDL_RenderClear(renderer);
 
         char texto[50];
         snprintf(texto, sizeof(texto), "%d", HIGH_SCORE);
 
-
         renderTablero(tablero, ventana, renderer, pillChica, superPill, esqAbIzq, muroAb, muroIzq, muroDer, muroArriba, esqArribaIzq, esqArribaDer, esqAbDer, esq1, esq2, esq3, esq4, muroVert1, muroVert2, muroHor1, muroHor2, esq4_2, esq3_2, esq1_2, esq2_2, interseccion1, interseccion2, interseccion3, interseccion4, interseccion5, interseccion6, esq90g1, esq90g2, esq90g3, esq90g4, borde1, borde2, rosado);
-        
-        
+
         imagenVidas(ventana, renderer, pacmanReverse, vidas);
 
         renderText(renderer, font, "1 UP", 20, 0);
@@ -642,20 +383,21 @@ void ventanaPrincipal(int **tablero, Uint32 flags) {
 
         renderText(renderer, font, texto, (anchoP-30)/2, 20);
         renderText(renderer, font, texto, (20), 20);
-        
+
         SDL_RenderPresent(renderer);
         SDL_Delay(16);
     }
 
-    //Liberar la textura después de usarla
-    //Clean
-
+    // Liberar la textura después de usarla
+    // Clean
+    Mix_CloseAudio();
     SDL_DestroyTexture(pacmanReverse);
     SDL_DestroyTexture(pillChica);
     TTF_CloseFont(font);
     SDL_FreeSurface(iconSurface);
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(ventana);
+    Mix_Quit();
     TTF_Quit();
     IMG_Quit();
     SDL_Quit();
