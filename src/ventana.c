@@ -4,9 +4,18 @@
 #include <SDL2/SDL_mixer.h>
 #include <stdio.h>
 #include <stdbool.h>
+#include <math.h>
+
 #include "audio.h"
 #include "funciones.h"
 
+#define UP 0
+#define DOWN 1
+#define LEFT 2
+#define RIGHT 3
+
+const int offsetY = 48;
+const int offsetX = 16;
 
 SDL_Texture* cargarTextura(SDL_Renderer* renderer, const char* ruta) {
     SDL_Texture* textura = IMG_LoadTexture(renderer, ruta);
@@ -16,14 +25,52 @@ SDL_Texture* cargarTextura(SDL_Renderer* renderer, const char* ruta) {
     return textura;
 }
 
+void destruirTexturas(SDL_Texture *pillChica, SDL_Texture *superPill, SDL_Texture *pacmanReverse, SDL_Texture *esqAbIzq, SDL_Texture *muroAb, SDL_Texture *muroIzq, SDL_Texture *muroDer, SDL_Texture *muroArriba, SDL_Texture *esqArribaIzq, SDL_Texture *esqArribaDer, SDL_Texture *esqAbDer, SDL_Texture *esq1, SDL_Texture *esq2, SDL_Texture *esq3, SDL_Texture *esq4, SDL_Texture *muroVert1, SDL_Texture *muroVert2, SDL_Texture *muroHor1, SDL_Texture *muroHor2, SDL_Texture *esq4_2, SDL_Texture *esq3_2, SDL_Texture *esq1_2, SDL_Texture *esq2_2, SDL_Texture *interseccion1, SDL_Texture *interseccion2, SDL_Texture *interseccion3, SDL_Texture *interseccion4, SDL_Texture *interseccion5, SDL_Texture *interseccion6, SDL_Texture *esq90g1, SDL_Texture *esq90g2, SDL_Texture *esq90g3, SDL_Texture *esq90g4, SDL_Texture *borde1, SDL_Texture *borde2, SDL_Texture *rosado) {
+
+    SDL_DestroyTexture(pillChica);
+    SDL_DestroyTexture(superPill);
+    SDL_DestroyTexture(pacmanReverse);
+    SDL_DestroyTexture(esqAbIzq);
+    SDL_DestroyTexture(muroAb);
+    SDL_DestroyTexture(muroIzq);
+    SDL_DestroyTexture(muroDer);
+    SDL_DestroyTexture(muroArriba);
+    SDL_DestroyTexture(esqArribaIzq);
+    SDL_DestroyTexture(esqArribaDer);
+    SDL_DestroyTexture(esqAbDer);
+    SDL_DestroyTexture(esq1);
+    SDL_DestroyTexture(esq2);
+    SDL_DestroyTexture(esq3);
+    SDL_DestroyTexture(esq4);
+    SDL_DestroyTexture(muroVert1);
+    SDL_DestroyTexture(muroVert2);
+    SDL_DestroyTexture(muroHor1);
+    SDL_DestroyTexture(muroHor2);
+    SDL_DestroyTexture(esq4_2);
+    SDL_DestroyTexture(esq3_2);
+    SDL_DestroyTexture(esq1_2);
+    SDL_DestroyTexture(esq2_2);
+    SDL_DestroyTexture(interseccion1);
+    SDL_DestroyTexture(interseccion2);
+    SDL_DestroyTexture(interseccion3);
+    SDL_DestroyTexture(interseccion4);
+    SDL_DestroyTexture(interseccion5);
+    SDL_DestroyTexture(interseccion6);
+    SDL_DestroyTexture(esq90g1);
+    SDL_DestroyTexture(esq90g2);
+    SDL_DestroyTexture(esq90g3);
+    SDL_DestroyTexture(esq90g4);
+    SDL_DestroyTexture(borde1);
+    SDL_DestroyTexture(borde2);
+    SDL_DestroyTexture(rosado);
+}
+
 void renderTablero(int **tablero, SDL_Window* initWindow, SDL_Renderer* renderer, SDL_Texture *pillChica, SDL_Texture *superPill, SDL_Texture *esqAbIzq, SDL_Texture *muroAb, SDL_Texture *muroIzq, SDL_Texture *muroDer, SDL_Texture *muroArriba, SDL_Texture *esqArribaIzq, SDL_Texture *esqArribaDer, SDL_Texture *esqAbDer, SDL_Texture *esq1, SDL_Texture *esq2, SDL_Texture *esq3, SDL_Texture *esq4, SDL_Texture *muroVert1, SDL_Texture *muroVert2, SDL_Texture *muroHor1, SDL_Texture *muroHor2, SDL_Texture *esq4_2, SDL_Texture *esq3_2, SDL_Texture *esq1_2, SDL_Texture *esq2_2, SDL_Texture *interseccion1, SDL_Texture *interseccion2, SDL_Texture *interseccion3, SDL_Texture *interseccion4, SDL_Texture *interseccion5, SDL_Texture *interseccion6, SDL_Texture *esq90g1, SDL_Texture *esq90g2, SDL_Texture *esq90g3, SDL_Texture *esq90g4, SDL_Texture *borde1, SDL_Texture *borde2, SDL_Texture *rosado){
 
     int f = tamanoFilas(tablero);
     int c = tamanoColumnas(tablero);
     int anchoCelda = 448 / c;
     int altoCelda = 496 / f;
-    int offsetY = 48;
-    int offsetX = 16;
 
     for (int i = 0; i < f; i++) {
         for (int j = 0; j < c; j++) {
@@ -154,7 +201,6 @@ void renderTablero(int **tablero, SDL_Window* initWindow, SDL_Renderer* renderer
     }
 }
 
-
 void renderText(SDL_Renderer *renderer, TTF_Font *font, const char *text, int x, int y){
     SDL_Color color = {255, 255, 255};
     SDL_Surface *surface = TTF_RenderText_Solid(font, text, color);
@@ -216,7 +262,7 @@ bool ventanaInicio(SDL_Renderer* renderer, TTF_Font *font) {
                 ejecutando = false;
             }
             if (evento.type == SDL_KEYDOWN || evento.type == SDL_MOUSEBUTTONDOWN) {
-                intro("audio/intro.mp3");
+                //intro("audio/start.wav");
                 return true;
             }
         }
@@ -266,10 +312,86 @@ bool ventanaInicio(SDL_Renderer* renderer, TTF_Font *font) {
     return false; // Si no se presiona nada, se sigue mostrando la ventana de inicio
 }
 
+//checking toma el tablero, las coordenadas del pacman y el high score y revisa si
+//esa coordenada es una pildora o una super pildora, si es así aumenta 
+//respectivamente la high score y convierte esa coordenada en un 0
+
+int checking(int **tablero, int x, int y, int *HIGH_SCORE){
+    if(tablero[y][x] == 3 ){
+        tablero[y][x] = 0;
+        *HIGH_SCORE += 50;
+        return 1;
+    }
+    else if(tablero[y][x] == 0){
+        return 1;
+    }
+    else if(tablero[y][x] == 2){
+        tablero[y][x] = 0;
+        *HIGH_SCORE += 10;
+        chomp("audio/eat_dot_0.wav", "audio/eat_dot_1.wav");
+        return 1;
+    }
+    else return 0;
+}
+//
+
+/*
+bool checking_fan(int **tablero,int x,int y){
+    if(tablero[y][x] == 3 ){
+        return 1;
+    }
+    else if(tablero[y][x] == 0){
+        return 1;
+    }
+    else if(tablero[y][x] == 2){
+        return 1;
+    }
+    else if(tablero[y][x] == 36){
+        return 1;
+    }
+    else return 0;
+}
+
+void mov_fantasma(int *coor_x, int *coor_y, int *inicial_x, int *inicial_y,int **tablero, int anchoCelda, int altoCelda, int offsetX, int offsetY,SDL_Renderer *renderer, SDL_Texture *pacmanReverseT){
+    int mov = rand()%4;
+    if(mov == 0){
+        while(checking_fan(tablero,*coor_x,*coor_y-1)){
+            *inicial_y -= altoCelda;
+            *coor_y--;
+            fantasma(inicial_x,inicial_y, renderer,pacmanReverseT);
+        }
+    }
+    else if(mov == 1){
+        while(checking_fan(tablero,*coor_x,*coor_y+1)){
+            *inicial_y +=altoCelda;
+            *coor_y++;
+            fantasma(inicial_x,inicial_y, renderer,pacmanReverseT);
+        }
+    }
+    else if(mov == 2){
+        while(checking_fan(tablero,*coor_x-1,*coor_y)){
+            *inicial_x -=anchoCelda;
+            *coor_x--;
+            fantasma(inicial_x,inicial_y, renderer,pacmanReverseT);
+        }
+    }
+    else if(mov == 3){
+        while(checking_fan(tablero,*coor_x+1,*coor_y)){
+            *inicial_x +=anchoCelda;
+            *coor_x++;
+            fantasma(inicial_x,inicial_y, renderer,pacmanReverseT);
+        }
+    }
+}
+*/
+
 void ventanaJuego(int **tablero) {
     const char *titulo = "Pac-man";
     int anchoP = 480;
     int altoP = 580;
+    
+    inicializarSDL();
+    Mix_AllocateChannels(32);
     
     if (SDL_Init(SDL_INIT_VIDEO) < 0) {
         printf("Error al inicializar SDL: %s\n", SDL_GetError());
@@ -342,6 +464,7 @@ void ventanaJuego(int **tablero) {
     SDL_Texture *borde1 = cargarTextura(renderer, "img/borde1.png");
     SDL_Texture *borde2 = cargarTextura(renderer, "img/borde2.png");
     SDL_Texture *rosado = cargarTextura(renderer, "img/rosado.png");
+    SDL_Texture *pacmanPlayer = cargarTextura(renderer, "img/pacmanPlayer.png");
 
     TTF_Font *font = TTF_OpenFont("font/ARCADECLASSIC.ttf", 24);
     if (font == NULL) {
@@ -351,9 +474,36 @@ void ventanaJuego(int **tablero) {
 
     // Bucle principal
 
-    int HIGH_SCORE = 9999;
+    int HIGH_SCORE = 0;
     int ejecutando = 1;
     int vidas = 4;
+    //int de la función tablero para poder calcular bien dónde
+    //va a estar el pacman en relación a la matriz original
+    int f = tamanoFilas(tablero);
+    int c = tamanoColumnas(tablero);
+    int anchoCelda = 448 / c;
+    int altoCelda = 496 / f;
+
+    //coordenadas de inicio en terminos de matriz
+    int coor_x = 13;
+    int coor_y = 23;
+    
+    //coordenadas de inicio en terminos de ventana
+    int inicial_x = 215;
+    int inicial_y = 409;
+
+
+    
+    int dir_actual = -1;
+    Uint32 last_move_time = 0;
+    
+    /*
+    int coor_x_fan = 14;
+    int coor_y_fan = 12;
+    int inicial_x_fan =(14 * anchoCelda) + offsetX-2;
+    int inicial_y_fan =(12 * altoCelda) + offsetY-6; 
+    */
+
     SDL_SetWindowIcon(ventana, iconSurface);
 
     if (!ventanaInicio(renderer, font)) {
@@ -361,38 +511,98 @@ void ventanaJuego(int **tablero) {
         SDL_Quit();
         return;
     }
+    int pacmanSpeed = 120;
     SDL_Event evento;
+
+    //esta constante es la base de la deteccion de teclas
+    const Uint8* key = SDL_GetKeyboardState(NULL);
+    
     while (ejecutando) {
-        while (SDL_PollEvent(&evento)) {
-            if (evento.type == SDL_QUIT) {
-                ejecutando = 0;
-            }
-        }
         SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
         SDL_RenderClear(renderer);
 
-        char texto[50];
-        snprintf(texto, sizeof(texto), "%d", HIGH_SCORE);
-
-        renderTablero(tablero, ventana, renderer, pillChica, superPill, esqAbIzq, muroAb, muroIzq, muroDer, muroArriba, esqArribaIzq, esqArribaDer, esqAbDer, esq1, esq2, esq3, esq4, muroVert1, muroVert2, muroHor1, muroHor2, esq4_2, esq3_2, esq1_2, esq2_2, interseccion1, interseccion2, interseccion3, interseccion4, interseccion5, interseccion6, esq90g1, esq90g2, esq90g3, esq90g4, borde1, borde2, rosado);
-
+        // Renderizar el tablero y la interfaz
+        renderTablero(tablero, ventana, renderer, pillChica, superPill, esqAbIzq, muroAb, muroIzq, muroDer, muroArriba, esqArribaIzq, esqArribaDer, esqAbDer,   esq1, esq2, esq3, esq4, muroVert1, muroVert2, muroHor1, muroHor2, esq4_2, esq3_2, esq1_2, esq2_2, interseccion1, interseccion2, interseccion3,    interseccion4, interseccion5, interseccion6, esq90g1, esq90g2, esq90g3, esq90g4, borde1, borde2, rosado);
         imagenVidas(ventana, renderer, pacmanReverse, vidas);
 
+        char texto[50];
+        snprintf(texto, sizeof(texto), "%d", HIGH_SCORE);
         renderText(renderer, font, "1 UP", 20, 0);
-        renderText(renderer, font, "HIGH SCORE", (anchoP - 110)/2, 0);
+        renderText(renderer, font, "HIGH SCORE", (anchoP - 110) / 2, 0);
+        renderText(renderer, font, texto, (anchoP - 30) / 2, 20);
+        renderText(renderer, font, texto, (30), 20);
 
-        renderText(renderer, font, texto, (anchoP-30)/2, 20);
-        renderText(renderer, font, texto, (20), 20);
+        sirena("audio/siren0_firstloop.wav");
+        
+        // Manejar eventos
+        while (SDL_PollEvent(&evento)) {
+            if (evento.type == SDL_QUIT) {
+                ejecutando = 0;
+            } else if (evento.type == SDL_KEYDOWN) {
+                if (key[SDL_SCANCODE_UP] && checking(tablero, coor_x, coor_y - 1, &HIGH_SCORE)) {
+                    dir_actual = UP;
+                }
+                if (key[SDL_SCANCODE_DOWN] && checking(tablero, coor_x, coor_y + 1, &HIGH_SCORE)) {
+                    dir_actual = DOWN;
+                }
+                if (key[SDL_SCANCODE_LEFT] && checking(tablero, coor_x - 1, coor_y, &HIGH_SCORE)) {
+                    dir_actual = LEFT;
+                }
+                if (key[SDL_SCANCODE_RIGHT] && checking(tablero, coor_x + 1, coor_y, &HIGH_SCORE)) {
+                    dir_actual = RIGHT;
+                }
+            }
+        }
 
+        Uint32 current_time = SDL_GetTicks(); // Tiempo actual
+        if (current_time > last_move_time + pacmanSpeed) { // Controlar el tiempo entre movimientos
+            switch (dir_actual) {
+                case UP:
+                    if (checking(tablero, coor_x, coor_y - 1, &HIGH_SCORE)) {
+                        inicial_y -= altoCelda;
+                        coor_y--;
+                    }
+                    break;
+                case DOWN:
+                    if (checking(tablero, coor_x, coor_y + 1, &HIGH_SCORE)) {
+                        inicial_y += altoCelda;
+                        coor_y++;
+                    }
+                    break;
+                case LEFT:
+                    if (checking(tablero, coor_x - 1, coor_y, &HIGH_SCORE)) {
+                        inicial_x -= anchoCelda;
+                        coor_x--;
+                    }
+                    break;
+                case RIGHT:
+                    if (checking(tablero, coor_x + 1, coor_y, &HIGH_SCORE)) {
+                        inicial_x += anchoCelda;
+                        coor_x++;
+                    }
+                    break;
+                default:
+                    break; // No hay movimiento
+            }
+            last_move_time = current_time; // Actualizar el tiempo del último movimiento
+        }
+
+        // Dibujar Pac-Man en su posición actual
+        pacman(inicial_x, inicial_y, renderer, pacmanPlayer);
+
+        // Renderizar en pantalla
         SDL_RenderPresent(renderer);
         SDL_Delay(16);
-    }
+}
+    /*
+    mov_fantasma(&coor_x_fan, &coor_y_fan, &inicial_x_fan,&inicial_y_fan, tablero,anchoCelda,altoCelda,offsetX,offsetY,renderer,pacmanPlayer);
+    */
 
     // Liberar la textura después de usarla
     // Clean
+
     Mix_CloseAudio();
-    SDL_DestroyTexture(pacmanReverse);
-    SDL_DestroyTexture(pillChica);
+    destruirTexturas(pillChica, superPill, pacmanReverse, esqAbIzq, muroAb, muroIzq, muroDer, muroArriba, esqArribaIzq, esqArribaDer, esqAbDer, esq1, esq2, esq3, esq4, muroVert1, muroVert2, muroHor1, muroHor2, esq4_2, esq3_2, esq1_2, esq2_2, interseccion1, interseccion2, interseccion3, interseccion4, interseccion5, interseccion6, esq90g1, esq90g2, esq90g3, esq90g4, borde1, borde2, rosado);
     TTF_CloseFont(font);
     SDL_FreeSurface(iconSurface);
     SDL_DestroyRenderer(renderer);

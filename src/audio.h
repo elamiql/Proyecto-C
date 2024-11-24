@@ -5,5 +5,7 @@
 #include <SDL2/SDL_mixer.h>
 
 void intro();
-
+void chomp();
+void sirena();
+int inicializarSDL();
 #endif

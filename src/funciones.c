@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <SDL2/SDL.h>
+#include <SDL2/SDL_image.h>
 
 int filas;
 int columnas;
@@ -85,4 +87,27 @@ void liberarMatriz(int **tableroMatriz) {
         free(tableroMatriz[i]);
     }
     free(tableroMatriz);
+}
+
+//funcion que crea al pacman, int a y b son los lugares donde va a aparecer
+void pacman(int a, int b, SDL_Renderer *renderer, SDL_Texture *pacmanPlayer){
+    // Definir el tamaño de la imagen
+    SDL_Rect pacman;
+    pacman.w = 32;  // Ancho de la imagen
+    pacman.h = 32;  // Altura de la imagen
+    pacman.x = a; // Multiplicar la posición inicial por la velocidad
+    pacman.y = b; // Hacer lo mismo en Y, si aplica
+
+    SDL_RenderCopy(renderer, pacmanPlayer, NULL, &pacman);
+}
+
+void fantasma(int a, int b, SDL_Renderer *renderer, SDL_Texture *pacmanReverseT){
+    SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY,"0");
+    SDL_Rect fantasma;
+    fantasma.w = 27;
+    fantasma.h = 27;
+    fantasma.x = a;
+    fantasma.y = b;
+    SDL_RenderCopy(renderer, pacmanReverseT,NULL,&fantasma);
+    SDL_RenderPresent(renderer);
 }
