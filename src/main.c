@@ -10,5 +10,5 @@ int main(){
     int **tablero = leeTablero("tablero/tablero1.txt");
     ventanaJuego(tablero);
     liberarMatriz(tablero);
-
+ 
 }

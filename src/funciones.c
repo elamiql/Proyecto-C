@@ -1,12 +1,19 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <math.h>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
 
+#include "audio.h"
+
+#define RIGHT 0
+#define LEFT 1
+#define UP 2 
+#define DOWN 3
+
 int filas;
 int columnas;
-
 
 int** leeTablero(char *filename) {
     FILE *tablero1 = fopen(filename, "r");
@@ -68,7 +75,7 @@ int** leeTablero(char *filename) {
 void imprimeMatriz(int **tableroMatriz) {
     for (int i = 0; i < filas; i++) {
         for (int j = 0; j < columnas; j++) {
-            printf("%2d ", tableroMatriz[i][j]);
+            printf("%d ", tableroMatriz[i][j]);
         }
         printf("\n");
     }
@@ -89,25 +96,59 @@ void liberarMatriz(int **tableroMatriz) {
     free(tableroMatriz);
 }
 
-//funcion que crea al pacman, int a y b son los lugares donde va a aparecer
-void pacman(int a, int b, SDL_Renderer *renderer, SDL_Texture *pacmanPlayer){
-    // Definir el tamaño de la imagen
-    SDL_Rect pacman;
-    pacman.w = 32;  // Ancho de la imagen
-    pacman.h = 32;  // Altura de la imagen
-    pacman.x = a; // Multiplicar la posición inicial por la velocidad
-    pacman.y = b; // Hacer lo mismo en Y, si aplica
-
-    SDL_RenderCopy(renderer, pacmanPlayer, NULL, &pacman);
+int distancia(int x1, int x2, int y1, int y2){
+    return abs(x1-x2) + abs(y1-y2);
 }
 
-void fantasma(int a, int b, SDL_Renderer *renderer, SDL_Texture *pacmanReverseT){
-    SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY,"0");
-    SDL_Rect fantasma;
-    fantasma.w = 27;
-    fantasma.h = 27;
-    fantasma.x = a;
-    fantasma.y = b;
-    SDL_RenderCopy(renderer, pacmanReverseT,NULL,&fantasma);
-    SDL_RenderPresent(renderer);
+int checking(int **tablero, int x, int y, int *HIGH_SCORE){
+    if(tablero[y][x] == 3 ){
+        tablero[y][x] = 0;
+        *HIGH_SCORE += 50;
+        chomp("audio/eat_dot_0.wav", "audio/eat_dot_1.wav");
+        return 1;
+    }
+    else if(tablero[y][x] == 0){
+        return 1;
+    }
+    else if(tablero[y][x] == 2){
+        tablero[y][x] = 0;
+        *HIGH_SCORE += 10;
+        chomp("audio/eat_dot_0.wav", "audio/eat_dot_1.wav");
+        return 1;
+    }
+    else {
+        return 0;
+    }
+}
+
+void pacman(int x1, int y1, SDL_Renderer *renderer, SDL_Texture *pacmanRight1, SDL_Texture *pacmanRight2, 
+            SDL_Texture *pacmanLeft1, SDL_Texture *pacmanLeft2,
+            SDL_Texture *pacmanUp1, SDL_Texture *pacmanUp2, 
+            SDL_Texture *pacmanDown1, SDL_Texture *pacmanDown2,
+            int* estado, int direccion) {
+    
+    SDL_Rect pacmanRect = {x1, y1, 32, 32};  // Ajusta las dimensiones de Pac-Man
+    SDL_Texture* currentTexture = NULL;
+
+    // Selecciona la textura según la dirección y el estado de la boca
+    switch (direccion) {
+        case RIGHT:
+            currentTexture = (*estado == 0) ? pacmanRight1 : pacmanRight2;
+            break;
+        case LEFT:
+            currentTexture = (*estado == 0) ? pacmanLeft1 : pacmanLeft2;
+            break;
+        case UP:
+            currentTexture = (*estado == 0) ? pacmanUp1 : pacmanUp2;
+            break;
+        case DOWN:
+            currentTexture = (*estado == 0) ? pacmanDown1 : pacmanDown2;
+            break;
+    }
+
+    // Renderizar el sprite actual
+    SDL_RenderCopy(renderer, currentTexture, NULL, &pacmanRect);
+    
+    // Alternar el estado para la animación
+    *estado = 1 - *estado;  // Cambiar entre 0 y 1
 }
