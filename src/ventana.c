@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <stdbool.h>
 #include <math.h>
+#include <time.h>
 
 #include "audio.h"
 #include "funciones.h"
@@ -17,8 +18,9 @@
 #define pacmanSpeed 150
 
 
-const int offsetY = 48;
+const int offsetY = 48 -16*2;
 const int offsetX = 16;
+
 
 SDL_Texture* cargarTextura(SDL_Renderer* renderer, const char* ruta) {
     SDL_Texture* textura = IMG_LoadTexture(renderer, ruta);
@@ -26,47 +28,6 @@ SDL_Texture* cargarTextura(SDL_Renderer* renderer, const char* ruta) {
         printf("Error al cargar la textura %s: %s\n", ruta, IMG_GetError());
     }
     return textura;
-}
-
-
-void destruirTexturas(SDL_Texture *pillChica, SDL_Texture *superPill, SDL_Texture *pacmanReverse, SDL_Texture *esqAbIzq, SDL_Texture *muroAb, SDL_Texture *muroIzq, SDL_Texture *muroDer, SDL_Texture *muroArriba, SDL_Texture *esqArribaIzq, SDL_Texture *esqArribaDer, SDL_Texture *esqAbDer, SDL_Texture *esq1, SDL_Texture *esq2, SDL_Texture *esq3, SDL_Texture *esq4, SDL_Texture *muroVert1, SDL_Texture *muroVert2, SDL_Texture *muroHor1, SDL_Texture *muroHor2, SDL_Texture *esq4_2, SDL_Texture *esq3_2, SDL_Texture *esq1_2, SDL_Texture *esq2_2, SDL_Texture *interseccion1, SDL_Texture *interseccion2, SDL_Texture *interseccion3, SDL_Texture *interseccion4, SDL_Texture *interseccion5, SDL_Texture *interseccion6, SDL_Texture *esq90g1, SDL_Texture *esq90g2, SDL_Texture *esq90g3, SDL_Texture *esq90g4, SDL_Texture *borde1, SDL_Texture *borde2, SDL_Texture *rosado) {
-
-    SDL_DestroyTexture(pillChica);
-    SDL_DestroyTexture(superPill);
-    SDL_DestroyTexture(pacmanReverse);
-    SDL_DestroyTexture(esqAbIzq);
-    SDL_DestroyTexture(muroAb);
-    SDL_DestroyTexture(muroIzq);
-    SDL_DestroyTexture(muroDer);
-    SDL_DestroyTexture(muroArriba);
-    SDL_DestroyTexture(esqArribaIzq);
-    SDL_DestroyTexture(esqArribaDer);
-    SDL_DestroyTexture(esqAbDer);
-    SDL_DestroyTexture(esq1);
-    SDL_DestroyTexture(esq2);
-    SDL_DestroyTexture(esq3);
-    SDL_DestroyTexture(esq4);
-    SDL_DestroyTexture(muroVert1);
-    SDL_DestroyTexture(muroVert2);
-    SDL_DestroyTexture(muroHor1);
-    SDL_DestroyTexture(muroHor2);
-    SDL_DestroyTexture(esq4_2);
-    SDL_DestroyTexture(esq3_2);
-    SDL_DestroyTexture(esq1_2);
-    SDL_DestroyTexture(esq2_2);
-    SDL_DestroyTexture(interseccion1);
-    SDL_DestroyTexture(interseccion2);
-    SDL_DestroyTexture(interseccion3);
-    SDL_DestroyTexture(interseccion4);
-    SDL_DestroyTexture(interseccion5);
-    SDL_DestroyTexture(interseccion6);
-    SDL_DestroyTexture(esq90g1);
-    SDL_DestroyTexture(esq90g2);
-    SDL_DestroyTexture(esq90g3);
-    SDL_DestroyTexture(esq90g4);
-    SDL_DestroyTexture(borde1);
-    SDL_DestroyTexture(borde2);
-    SDL_DestroyTexture(rosado);
 }
 
 void renderTablero(int **tablero, SDL_Window* initWindow, SDL_Renderer* renderer, SDL_Texture *pillChica, SDL_Texture *superPill, SDL_Texture *esqAbIzq, SDL_Texture *muroAb, SDL_Texture *muroIzq, SDL_Texture *muroDer, SDL_Texture *muroArriba, SDL_Texture *esqArribaIzq, SDL_Texture *esqArribaDer, SDL_Texture *esqAbDer, SDL_Texture *esq1, SDL_Texture *esq2, SDL_Texture *esq3, SDL_Texture *esq4, SDL_Texture *muroVert1, SDL_Texture *muroVert2, SDL_Texture *muroHor1, SDL_Texture *muroHor2, SDL_Texture *esq4_2, SDL_Texture *esq3_2, SDL_Texture *esq1_2, SDL_Texture *esq2_2, SDL_Texture *interseccion1, SDL_Texture *interseccion2, SDL_Texture *interseccion3, SDL_Texture *interseccion4, SDL_Texture *interseccion5, SDL_Texture *interseccion6, SDL_Texture *esq90g1, SDL_Texture *esq90g2, SDL_Texture *esq90g3, SDL_Texture *esq90g4, SDL_Texture *borde1, SDL_Texture *borde2, SDL_Texture *rosado){
@@ -204,6 +165,149 @@ void renderTablero(int **tablero, SDL_Window* initWindow, SDL_Renderer* renderer
         }
     }
 }
+
+void animarMuerte(SDL_Renderer* renderer, int **tablero, SDL_Window* initWindow, 
+                  SDL_Texture** muerteFrames, int numFrames, int pacmanX, int pacmanY, 
+                  SDL_Texture *pillChica, SDL_Texture *superPill, SDL_Texture *esqAbIzq, 
+                  SDL_Texture *muroAb, SDL_Texture *muroIzq, SDL_Texture *muroDer, 
+                  SDL_Texture *muroArriba, SDL_Texture *esqArribaIzq, SDL_Texture *esqArribaDer, 
+                  SDL_Texture *esqAbDer, SDL_Texture *esq1, SDL_Texture *esq2, SDL_Texture *esq3, 
+                  SDL_Texture *esq4, SDL_Texture *muroVert1, SDL_Texture *muroVert2, 
+                  SDL_Texture *muroHor1, SDL_Texture *muroHor2, SDL_Texture *esq4_2, 
+                  SDL_Texture *esq3_2, SDL_Texture *esq1_2, SDL_Texture *esq2_2, 
+                  SDL_Texture *interseccion1, SDL_Texture *interseccion2, SDL_Texture *interseccion3, 
+                  SDL_Texture *interseccion4, SDL_Texture *interseccion5, SDL_Texture *interseccion6, 
+                  SDL_Texture *esq90g1, SDL_Texture *esq90g2, SDL_Texture *esq90g3, SDL_Texture *esq90g4, 
+                  SDL_Texture *borde1, SDL_Texture *borde2, SDL_Texture *rosado) {
+    int duracionFrame = 2200 / numFrames; // Duración de cada frame en milisegundos
+
+    for (int i = 0; i < numFrames; i++) {
+        SDL_RenderClear(renderer);
+        // Renderizar el tablero y elementos estáticos
+        renderTablero(tablero, initWindow, renderer, pillChica, superPill, esqAbIzq, muroAb, muroIzq, muroDer, 
+                      muroArriba, esqArribaIzq, esqArribaDer, esqAbDer, esq1, esq2, esq3, esq4, muroVert1, muroVert2, 
+                      muroHor1, muroHor2, esq4_2, esq3_2, esq1_2, esq2_2, interseccion1, interseccion2, 
+                      interseccion3, interseccion4, interseccion5, interseccion6, esq90g1, esq90g2, esq90g3, 
+                      esq90g4, borde1, borde2, rosado);
+
+        // Renderizar el frame actual de la animación
+        SDL_Rect dstRect = {pacmanX, pacmanY, 32, 32}; // Tamaño del sprite de Pac-Man
+        SDL_RenderCopy(renderer, muerteFrames[i], NULL, &dstRect);
+
+        SDL_RenderPresent(renderer); // Actualiza la pantalla con el nuevo frame
+        SDL_Delay(duracionFrame);    // Espera para mostrar el frame
+    }
+}
+
+void verificarColisionPacmanFantasma(int *pacmanX, int *pacmanY, 
+                                     int *pacmanCasillaX, int *pacmanCasillaY, 
+                                     int blinkyX, int blinkyY, 
+                                     int pinkyX, int pinkyY, 
+                                     int inkyX, int inkyY, 
+                                     int clydeX, int clydeY, 
+                                     int *vidas, 
+                                     SDL_Renderer* renderer, SDL_Texture** muerteFrames, int numFrames,
+                                     int **tablero, SDL_Window* initWindow,
+                                     SDL_Texture *pillChica, SDL_Texture *superPill, 
+                                     SDL_Texture *esqAbIzq, SDL_Texture *muroAb, SDL_Texture *muroIzq, 
+                                     SDL_Texture *muroDer, SDL_Texture *muroArriba, SDL_Texture *esqArribaIzq, 
+                                     SDL_Texture *esqArribaDer, SDL_Texture *esqAbDer, SDL_Texture *esq1, 
+                                     SDL_Texture *esq2, SDL_Texture *esq3, SDL_Texture *esq4, SDL_Texture *muroVert1, 
+                                     SDL_Texture *muroVert2, SDL_Texture *muroHor1, SDL_Texture *muroHor2, 
+                                     SDL_Texture *esq4_2, SDL_Texture *esq3_2, SDL_Texture *esq1_2, SDL_Texture *esq2_2, 
+                                     SDL_Texture *interseccion1, SDL_Texture *interseccion2, SDL_Texture *interseccion3, 
+                                     SDL_Texture *interseccion4, SDL_Texture *interseccion5, SDL_Texture *interseccion6, 
+                                     SDL_Texture *esq90g1, SDL_Texture *esq90g2, SDL_Texture *esq90g3, SDL_Texture *esq90g4, 
+                                     SDL_Texture *borde1, SDL_Texture *borde2, SDL_Texture *rosado){
+
+    // Calcular las casillas de los fantasmas
+    int blinkyCasillaX = blinkyX / 16;
+    int blinkyCasillaY = blinkyY / 16;
+    
+    int pinkyCasillaX = pinkyX / 16;
+    int pinkyCasillaY = pinkyY / 16;
+    
+    int inkyCasillaX = inkyX / 16;
+    int inkyCasillaY = inkyY / 16;
+    
+    int clydeCasillaX = clydeX / 16;
+    int clydeCasillaY = clydeY / 16;
+
+    // Verificar si Pac-Man y algún fantasma están en la misma casilla
+    if ((*pacmanCasillaX == blinkyCasillaX && *pacmanCasillaY == blinkyCasillaY) ||
+        (*pacmanCasillaX == pinkyCasillaX && *pacmanCasillaY == pinkyCasillaY) ||
+        (*pacmanCasillaX == inkyCasillaX && *pacmanCasillaY == inkyCasillaY) ||
+        (*pacmanCasillaX == clydeCasillaX && *pacmanCasillaY == clydeCasillaY)) {
+        
+        printf("¡Colisión detectada! Pac-Man pierde una vida.\n");
+
+        *vidas -= 1;
+
+        // Reproduce sonido de muerte
+        muerte("audio/death_0.wav");
+        animarMuerte(renderer, tablero, initWindow, muerteFrames, numFrames, *pacmanX, *pacmanY, 
+                     pillChica, superPill, esqAbIzq, muroAb, muroIzq, muroDer, muroArriba, esqArribaIzq, 
+                     esqArribaDer, esqAbDer, esq1, esq2, esq3, esq4, muroVert1, muroVert2, muroHor1, 
+                     muroHor2, esq4_2, esq3_2, esq1_2, esq2_2, interseccion1, interseccion2, interseccion3, 
+                     interseccion4, interseccion5, interseccion6, esq90g1, esq90g2, esq90g3, esq90g4, 
+                     borde1, borde2, rosado);
+
+        if (*vidas > 0) {
+            // Reiniciar posición del Pac-Man
+            *pacmanX = 215; // Coordenada X inicial del sprite
+            *pacmanY = 377; // Coordenada Y inicial del sprite
+            *pacmanCasillaX = *pacmanX / 16; // Casilla X inicial
+            *pacmanCasillaY = *pacmanY / 16; // Casilla Y inicial
+
+            SDL_Delay(2000); // Pausa tras la animación
+
+        } else {
+            printf("¡Game Over! Pac-Man no tiene más vidas.\n");
+            // Aquí puedes agregar lógica adicional de Game Over si es necesario
+        }
+    }
+}
+
+void destruirTexturas(SDL_Texture *pillChica, SDL_Texture *superPill, SDL_Texture *pacmanReverse, SDL_Texture *esqAbIzq, SDL_Texture *muroAb, SDL_Texture *muroIzq, SDL_Texture *muroDer, SDL_Texture *muroArriba, SDL_Texture *esqArribaIzq, SDL_Texture *esqArribaDer, SDL_Texture *esqAbDer, SDL_Texture *esq1, SDL_Texture *esq2, SDL_Texture *esq3, SDL_Texture *esq4, SDL_Texture *muroVert1, SDL_Texture *muroVert2, SDL_Texture *muroHor1, SDL_Texture *muroHor2, SDL_Texture *esq4_2, SDL_Texture *esq3_2, SDL_Texture *esq1_2, SDL_Texture *esq2_2, SDL_Texture *interseccion1, SDL_Texture *interseccion2, SDL_Texture *interseccion3, SDL_Texture *interseccion4, SDL_Texture *interseccion5, SDL_Texture *interseccion6, SDL_Texture *esq90g1, SDL_Texture *esq90g2, SDL_Texture *esq90g3, SDL_Texture *esq90g4, SDL_Texture *borde1, SDL_Texture *borde2, SDL_Texture *rosado) {
+
+    SDL_DestroyTexture(pillChica);
+    SDL_DestroyTexture(superPill);
+    SDL_DestroyTexture(pacmanReverse);
+    SDL_DestroyTexture(esqAbIzq);
+    SDL_DestroyTexture(muroAb);
+    SDL_DestroyTexture(muroIzq);
+    SDL_DestroyTexture(muroDer);
+    SDL_DestroyTexture(muroArriba);
+    SDL_DestroyTexture(esqArribaIzq);
+    SDL_DestroyTexture(esqArribaDer);
+    SDL_DestroyTexture(esqAbDer);
+    SDL_DestroyTexture(esq1);
+    SDL_DestroyTexture(esq2);
+    SDL_DestroyTexture(esq3);
+    SDL_DestroyTexture(esq4);
+    SDL_DestroyTexture(muroVert1);
+    SDL_DestroyTexture(muroVert2);
+    SDL_DestroyTexture(muroHor1);
+    SDL_DestroyTexture(muroHor2);
+    SDL_DestroyTexture(esq4_2);
+    SDL_DestroyTexture(esq3_2);
+    SDL_DestroyTexture(esq1_2);
+    SDL_DestroyTexture(esq2_2);
+    SDL_DestroyTexture(interseccion1);
+    SDL_DestroyTexture(interseccion2);
+    SDL_DestroyTexture(interseccion3);
+    SDL_DestroyTexture(interseccion4);
+    SDL_DestroyTexture(interseccion5);
+    SDL_DestroyTexture(interseccion6);
+    SDL_DestroyTexture(esq90g1);
+    SDL_DestroyTexture(esq90g2);
+    SDL_DestroyTexture(esq90g3);
+    SDL_DestroyTexture(esq90g4);
+    SDL_DestroyTexture(borde1);
+    SDL_DestroyTexture(borde2);
+    SDL_DestroyTexture(rosado);
+}
+
 
 void renderText(SDL_Renderer *renderer, TTF_Font *font, const char *text, int x, int y){
     SDL_Color color = {255, 255, 255};
@@ -394,6 +498,8 @@ void ventanaJuego(int **tablero) {
     SDL_Texture *borde1 = cargarTextura(renderer, "img/borde1.png");
     SDL_Texture *borde2 = cargarTextura(renderer, "img/borde2.png");
     SDL_Texture *rosado = cargarTextura(renderer, "img/rosado.png");
+
+    //Cargar texturas del pacman
     SDL_Texture* pacmanRight1 = cargarTextura(renderer, "img/pacmanRight1.png");
     SDL_Texture* pacmanRight2 = cargarTextura(renderer, "img/pacmanRight2.png");
     SDL_Texture* pacmanLeft1 = cargarTextura(renderer, "img/pacmanLeft1.png");
@@ -403,7 +509,62 @@ void ventanaJuego(int **tablero) {
     SDL_Texture* pacmanDown1 = cargarTextura(renderer, "img/pacmanDown1.png");
     SDL_Texture* pacmanDown2 = cargarTextura(renderer, "img/pacmanDown2.png");
 
-    //SDL_Texture *Blinky = cargarTextura(renderer, "img/Blinky.png");
+    //Cargar texturas del blinky
+    SDL_Texture* blinkyRight1 = cargarTextura(renderer, "img/blinkyRight1.png");
+    SDL_Texture* blinkyRight2 = cargarTextura(renderer, "img/blinkyRight2.png");
+    SDL_Texture* blinkyLeft1 = cargarTextura(renderer, "img/blinkyLeft1.png");
+    SDL_Texture* blinkyLeft2 = cargarTextura(renderer, "img/blinkyLeft2.png");
+    SDL_Texture* blinkyUp1 = cargarTextura(renderer, "img/blinkyUp1.png");
+    SDL_Texture* blinkyUp2 = cargarTextura(renderer, "img/blinkyUp2.png");
+    SDL_Texture* blinkyDown1 = cargarTextura(renderer, "img/blinkyDown1.png");
+    SDL_Texture* blinkyDown2 = cargarTextura(renderer, "img/blinkyDown2.png");
+
+    //Cargar texturas del pinky
+
+    SDL_Texture* pinkyRight1 = cargarTextura(renderer, "img/pinkyRight1.png");
+    SDL_Texture* pinkyRight2 = cargarTextura(renderer, "img/pinkyRight2.png");
+    SDL_Texture* pinkyLeft1 = cargarTextura(renderer, "img/pinkyLeft1.png");
+    SDL_Texture* pinkyLeft2 = cargarTextura(renderer, "img/pinkyLeft2.png");
+    SDL_Texture* pinkyUp1 = cargarTextura(renderer, "img/pinkyUp1.png");
+    SDL_Texture* pinkyUp2 = cargarTextura(renderer, "img/pinkyUp2.png");
+    SDL_Texture* pinkyDown1 = cargarTextura(renderer, "img/pinkyDown1.png");
+    SDL_Texture* pinkyDown2 = cargarTextura(renderer, "img/pinkyDown2.png");
+
+    //cargar texturas del inky
+
+    SDL_Texture* inkyRight1 = cargarTextura(renderer, "img/inkyRight1.png");
+    SDL_Texture* inkyRight2 = cargarTextura(renderer, "img/inkyRight2.png");
+    SDL_Texture* inkyLeft1 = cargarTextura(renderer, "img/inkyLeft1.png");
+    SDL_Texture* inkyLeft2 = cargarTextura(renderer, "img/inkyLeft2.png");
+    SDL_Texture* inkyUp1 = cargarTextura(renderer, "img/inkyUp1.png");
+    SDL_Texture* inkyUp2 = cargarTextura(renderer, "img/inkyUp2.png");
+    SDL_Texture* inkyDown1 = cargarTextura(renderer, "img/inkyDown1.png");
+    SDL_Texture* inkyDown2 = cargarTextura(renderer, "img/inkyDown2.png");
+
+    //cargar texturas del clyde
+    SDL_Texture* clydeRight1 = cargarTextura(renderer, "img/clydeRight1.png");
+    SDL_Texture* clydeRight2 = cargarTextura(renderer, "img/clydeRight2.png");
+    SDL_Texture* clydeLeft1 = cargarTextura(renderer, "img/clydeLeft1.png");
+    SDL_Texture* clydeLeft2 = cargarTextura(renderer, "img/clydeLeft2.png");
+    SDL_Texture* clydeUp1 = cargarTextura(renderer, "img/clydeUp1.png");
+    SDL_Texture* clydeUp2 = cargarTextura(renderer, "img/clydeUp2.png");
+    SDL_Texture* clydeDown1 = cargarTextura(renderer, "img/clydeDown1.png");
+    SDL_Texture* clydeDown2 = cargarTextura(renderer, "img/clydeDown2.png");
+    
+    //Texturas de muerte
+
+    SDL_Texture* muerteFrames[10];
+    muerteFrames[0] = cargarTextura(renderer, "img/death1.png");
+    muerteFrames[1] = cargarTextura(renderer, "img/death2.png");
+    muerteFrames[2] = cargarTextura(renderer, "img/death3.png");
+    muerteFrames[3] = cargarTextura(renderer, "img/death4.png");
+    muerteFrames[4] = cargarTextura(renderer, "img/death5.png");
+    muerteFrames[5] = cargarTextura(renderer, "img/death6.png");
+    muerteFrames[6] = cargarTextura(renderer, "img/death7.png");
+    muerteFrames[7] = cargarTextura(renderer, "img/death8.png");
+    muerteFrames[8] = cargarTextura(renderer, "img/death9.png");
+    muerteFrames[9] = cargarTextura(renderer, "img/death10.png");
+    muerteFrames[10] = cargarTextura(renderer, "img/death11.png");
 
 
     TTF_Font *font = TTF_OpenFont("font/ARCADECLASSIC.ttf", 24);
@@ -432,15 +593,44 @@ void ventanaJuego(int **tablero) {
     
     //coordenadas de inicio en terminos de ventana
     int inicial_x = 215;
-    int inicial_y = 409;
+    int inicial_y = 377;
     
     int estado = 0;
     int dir_actual = RIGHT;
+    Uint32 lastTime = 0;
+    Uint32 last_move_time = SDL_GetTicks();
 
     //---------------------------------------------
 
-    Uint32 last_move_time = 0;
-    
+    int blinkyX = 215;
+    int blinkyY = 182;
+    int direccionBlinky=0; // Dirección inicial de Blinky
+    int blinkyEstado = 0;    // Estado inicial de Blinky
+
+    //---------------------------------------------
+
+    int pinkyX = 215;
+    int pinkyY = 182;
+    int direccionpinky=0; // Dirección inicial de Pinky
+    int pinkyEstado = 0;    // Estado inicial de Pinky
+
+    //---------------------------------------------
+
+    int inkyX = 215;
+    int inkyY = 182;
+    int direccioninky=0; // Dirección inicial de inky
+    int inkyEstado = 0;    // Estado inicial de inky
+
+    //---------------------------------------------
+
+    int clydeX = 215;
+    int clydeY = 182;
+    int direccionclyde=0; // Dirección inicial de clyde
+    int clydeEstado = 0;    // Estado inicial de clyde
+
+
+    Uint32 ticks = SDL_GetTicks();
+
     SDL_SetWindowIcon(ventana, iconSurface);
 
     if (!ventanaInicio(renderer, font)) {
@@ -452,21 +642,27 @@ void ventanaJuego(int **tablero) {
     SDL_Event evento;
     //esta constante es la base de la deteccion de teclas
     const Uint8* key = SDL_GetKeyboardState(NULL);
-    
+
+    srand(time(NULL));
+
+    direccionBlinky = rand()%4;
+
     while (ejecutando) {
+
         SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
         SDL_RenderClear(renderer);
 
         // Renderizar el tablero y la interfaz
         renderTablero(tablero, ventana, renderer, pillChica, superPill, esqAbIzq, muroAb, muroIzq, muroDer, muroArriba, esqArribaIzq, esqArribaDer, esqAbDer,   esq1, esq2, esq3, esq4, muroVert1, muroVert2, muroHor1, muroHor2, esq4_2, esq3_2, esq1_2, esq2_2, interseccion1, interseccion2, interseccion3,    interseccion4, interseccion5, interseccion6, esq90g1, esq90g2, esq90g3, esq90g4, borde1, borde2, rosado);
+        
         imagenVidas(ventana, renderer, pacmanReverse, vidas);
 
         char texto[50];
         snprintf(texto, sizeof(texto), "%d", HIGH_SCORE);
-        renderText(renderer, font, "1 UP", 20, 0);
-        renderText(renderer, font, "HIGH SCORE", (anchoP - 110) / 2, 0);
-        renderText(renderer, font, texto, (anchoP - 30) / 2, 20);
-        renderText(renderer, font, texto, (30), 20);
+        renderText(renderer, font, "1 UP", 300 - 16*6, 520);
+        renderText(renderer, font, "HIGH SCORE", 350, 520);
+        renderText(renderer, font, texto, 350 + 32 +12, 540);
+        renderText(renderer, font, texto, 300 - 16*6, 540);
 
         sirena("audio/siren0_firstloop.wav");
         
@@ -524,13 +720,56 @@ void ventanaJuego(int **tablero) {
         }
 
         // Dibujar Pac-Man en su posición actual
-        pacman(inicial_x, inicial_y, renderer, pacmanRight1, pacmanRight2, pacmanLeft1, pacmanLeft2, pacmanUp1, pacmanUp2, pacmanDown1, pacmanDown2, &estado, dir_actual);
+        pacman(inicial_x, inicial_y, renderer, pacmanRight1, pacmanRight2, pacmanLeft1, pacmanLeft2, pacmanUp1, pacmanUp2, pacmanDown1, pacmanDown2, &estado, dir_actual, &lastTime);
 
+        //blinky
+        moverFantasma(renderer, blinkyRight1, blinkyRight2, blinkyLeft1, blinkyLeft2, 
+                  blinkyUp1, blinkyUp2, blinkyDown1, blinkyDown2, 
+                  &blinkyX, &blinkyY, &direccionBlinky, &blinkyEstado, 
+                  &ticks, &coor_x, &coor_y, tablero, anchoP, altoP);
+        //pinky
+        moverFantasma(renderer, pinkyRight1, pinkyRight2, pinkyLeft1, pinkyLeft2, 
+                  pinkyUp1, pinkyUp2, pinkyDown1, pinkyDown2, 
+                  &pinkyX, &pinkyY, &direccionpinky, &pinkyEstado, 
+                  &ticks, &coor_x, &coor_y, tablero, anchoP, altoP);
+        //inky
+        moverFantasma(renderer, inkyRight1, inkyRight2, inkyLeft1, inkyLeft2, 
+                  inkyUp1, inkyUp2, inkyDown1, inkyDown2, 
+                  &inkyX, &inkyY, &direccioninky, &inkyEstado, 
+                  &ticks, &coor_x, &coor_y, tablero, anchoP, altoP);
+        //clyde
+
+        moverFantasma(renderer, clydeRight1, clydeRight2, clydeLeft1, clydeLeft2, 
+                  clydeUp1, clydeUp2, clydeDown1, clydeDown2, 
+                  &clydeX, &clydeY, &direccionclyde, &clydeEstado, 
+                  &ticks, &coor_x, &coor_y, tablero, anchoP, altoP);
+        
+        verificarColisionPacmanFantasma(&inicial_x, &inicial_y, &coor_x, &coor_y,
+                                blinkyX, blinkyY, pinkyX, pinkyY,
+                                inkyX, inkyY, clydeX, clydeY,
+                                &vidas, renderer, muerteFrames, 10,
+                                tablero, ventana,
+                                pillChica, superPill, esqAbIzq, muroAb, muroIzq, muroDer,
+                                muroArriba, esqArribaIzq, esqArribaDer, esqAbDer, esq1,
+                                esq2, esq3, esq4, muroVert1, muroVert2, muroHor1,
+                                muroHor2, esq4_2, esq3_2, esq1_2, esq2_2, interseccion1,
+                                interseccion2, interseccion3, interseccion4, interseccion5,
+                                interseccion6, esq90g1, esq90g2, esq90g3, esq90g4, borde1,
+                                borde2, rosado);
+
+        if (vidas==0){
+            printf("Game over!");
+            ejecutando=0;
+        
+        }
         // Renderizar en pantalla
         SDL_RenderPresent(renderer);
-        SDL_Delay(90);
-}
+        SDL_Delay(16);
+    }
 
+    for (int i=0; i<11; i++){
+        SDL_DestroyTexture(muerteFrames[i]);
+    }
 
     destruirTexturas(pillChica, superPill, pacmanReverse, esqAbIzq, muroAb, muroIzq, muroDer, muroArriba, esqArribaIzq, esqArribaDer, esqAbDer, esq1, esq2, esq3, esq4, muroVert1, muroVert2, muroHor1, muroHor2, esq4_2, esq3_2, esq1_2, esq2_2, interseccion1, interseccion2, interseccion3, interseccion4, interseccion5, interseccion6, esq90g1, esq90g2, esq90g3, esq90g4, borde1, borde2, rosado);
     Mix_CloseAudio();

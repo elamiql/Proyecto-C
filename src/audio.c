@@ -102,3 +102,17 @@ void sirena(const char *archivo) {
     }
     Mix_VolumeChunk(sonido_sirena, 15);
 }
+
+void muerte(const char *archivo){
+    static Mix_Chunk *death1 = NULL;
+
+    if (!death1){
+        death1 = cargarSonido(archivo);
+        if (!death1){
+            printf("Error al cargar el sonido de muerte: %s\n", Mix_GetError());
+            return;
+        }
+    }
+
+    Mix_PlayChannel(-1, death1, 0);
+}

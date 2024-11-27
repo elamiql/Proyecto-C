@@ -5,4 +5,5 @@
 #include <SDL2/SDL.h>
 int ventanaJuego();
 bool ventanaInicio();
+
 #endif
