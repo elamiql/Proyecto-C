@@ -102,10 +102,11 @@ int distancia(int x1, int x2, int y1, int y2){
     return abs(x1-x2) + abs(y1-y2);
 }
 
-int checking(int **tablero, int x, int y, int *HIGH_SCORE){
+int checking(int **tablero, int x, int y, int *HIGH_SCORE, int *pill_time){
     if(tablero[y][x] == 3 ){
         tablero[y][x] = 0;
         *HIGH_SCORE += 50;
+        *pill_time = 1;
         chomp("audio/eat_dot_0.wav", "audio/eat_dot_1.wav");
         return 1;
     }
@@ -142,14 +143,14 @@ void pacman(int x1, int y1, SDL_Renderer *renderer, SDL_Texture *pacmanRight1, S
             SDL_Texture *pacmanLeft1, SDL_Texture *pacmanLeft2,
             SDL_Texture *pacmanUp1, SDL_Texture *pacmanUp2, 
             SDL_Texture *pacmanDown1, SDL_Texture *pacmanDown2,
-            int* estado, int direccion, Uint32* lastTime) {
+            int* estado, int direccion, Uint32* lastTime, int colision) {
     
     SDL_Rect pacmanRect = {x1, y1, 32, 32};  // Ajusta las dimensiones de Pac-Man
     SDL_Texture* currentTexture = NULL;
     Uint32 currentTime = SDL_GetTicks();  // Obtiene el tiempo actual en milisegundos
     
     // Cambiar el estado solo si ha pasado suficiente tiempo
-    if (currentTime - *lastTime > 100) {  // 100 ms de intervalo
+    if (currentTime - *lastTime > 80) {  // 100 ms de intervalo
         *estado = 1 - *estado;  // Cambiar entre 0 y 1
         *lastTime = currentTime;  // Actualizar el último tiempo
     }
@@ -170,6 +171,11 @@ void pacman(int x1, int y1, SDL_Renderer *renderer, SDL_Texture *pacmanRight1, S
             break;
     }
 
+    if(colision == 1){
+        if(currentTime%550 > 375){
+            currentTexture = NULL;
+        }
+    }
     // Renderizar el sprite actual
     SDL_RenderCopy(renderer, currentTexture, NULL, &pacmanRect);
 }
@@ -180,7 +186,7 @@ void moverFantasma(SDL_Renderer *renderer, SDL_Texture* FantasmaRight1, SDL_Text
                    SDL_Texture* FantasmaDown1, SDL_Texture* FantasmaDown2, 
                    int *FantasmaX, int *FantasmaY, int *direccionFantasma, int *FantasmaEstado, 
                    Uint32 *ticks, int *coorX, int *coorY, int **tablero, int anchoP, int altoP) {
-    
+
     int velocidad = 16; // Velocidad de Fantasma (16 píxeles por movimiento)
     SDL_Texture *FantasmaTexture = NULL;
     
@@ -189,8 +195,7 @@ void moverFantasma(SDL_Renderer *renderer, SDL_Texture* FantasmaRight1, SDL_Text
         *direccionFantasma = rand() % 4; // Direcciones aleatorias (0: ARRIBA, 1: ABAJO, 2: IZQUIERDA, 3: DERECHA)
         *ticks = SDL_GetTicks(); // Reiniciar el contador de tiempo
     }
-    
-    // Intentar mover Fantasma según su dirección
+        // Intentar mover Fantasma según su dirección
     int nuevaX = *FantasmaX, nuevaY = *FantasmaY;
     switch (*direccionFantasma) {
         case 0: // Arriba

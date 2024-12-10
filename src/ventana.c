@@ -15,7 +15,7 @@
 #define UP 2
 #define DOWN 3
 
-#define pacmanSpeed 150
+#define pacmanSpeed 130
 
 
 const int offsetY = 48 -16*2;
@@ -218,7 +218,8 @@ void verificarColisionPacmanFantasma(int *pacmanX, int *pacmanY,
                                      SDL_Texture *interseccion1, SDL_Texture *interseccion2, SDL_Texture *interseccion3, 
                                      SDL_Texture *interseccion4, SDL_Texture *interseccion5, SDL_Texture *interseccion6, 
                                      SDL_Texture *esq90g1, SDL_Texture *esq90g2, SDL_Texture *esq90g3, SDL_Texture *esq90g4, 
-                                     SDL_Texture *borde1, SDL_Texture *borde2, SDL_Texture *rosado){
+                                     SDL_Texture *borde1, SDL_Texture *borde2, SDL_Texture *rosado,
+                                     int *colision){
 
     // Calcular las casillas de los fantasmas
     int blinkyCasillaX = blinkyX / 16;
@@ -242,6 +243,7 @@ void verificarColisionPacmanFantasma(int *pacmanX, int *pacmanY,
         printf("¡Colisión detectada! Pac-Man pierde una vida.\n");
 
         *vidas -= 1;
+        *colision = 1;
 
         // Reproduce sonido de muerte
         muerte("audio/death_0.wav");
@@ -584,6 +586,10 @@ void ventanaJuego(int **tablero) {
     int c = tamanoColumnas(tablero);
     int anchoCelda = 448 / c;
     int altoCelda = 496 / f;
+    int colision = 0;
+    int invul = 1;
+    int pill_time = 0;
+    int colision_time = 0;
 
     //PARA EL PACMAN
     //---------------------------------------------
@@ -666,49 +672,59 @@ void ventanaJuego(int **tablero) {
 
         sirena("audio/siren0_firstloop.wav");
         
+        //teletransportar en los bordes
+        if(coor_x == 0){
+            coor_x = 26;
+            inicial_x = 215 + anchoCelda*13;
+        }
+        if(coor_x == 27){
+            coor_x = 1;
+            inicial_x = 215 - anchoCelda*12;
+        }
+
         // Manejar eventos
         while (SDL_PollEvent(&evento)) {
             if (evento.type == SDL_QUIT) {
                 ejecutando = 0;
             } else if (evento.type == SDL_KEYDOWN) {
-                if (key[SDL_SCANCODE_UP] && checking(tablero, coor_x, coor_y - 1, &HIGH_SCORE)) {
+                if (key[SDL_SCANCODE_UP] && checking(tablero, coor_x, coor_y - 1, &HIGH_SCORE, &pill_time)) {
                     dir_actual = UP;
                 }
-                if (key[SDL_SCANCODE_DOWN] && checking(tablero, coor_x, coor_y + 1, &HIGH_SCORE)) {
+                if (key[SDL_SCANCODE_DOWN] && checking(tablero, coor_x, coor_y + 1, &HIGH_SCORE, &pill_time)) {
                     dir_actual = DOWN;
                 }
-                if (key[SDL_SCANCODE_LEFT] && checking(tablero, coor_x - 1, coor_y, &HIGH_SCORE)) {
+                if (key[SDL_SCANCODE_LEFT] && checking(tablero, coor_x - 1, coor_y, &HIGH_SCORE, &pill_time)) {
                     dir_actual = LEFT;
                 }
-                if (key[SDL_SCANCODE_RIGHT] && checking(tablero, coor_x + 1, coor_y, &HIGH_SCORE)) {
+                if (key[SDL_SCANCODE_RIGHT] && checking(tablero, coor_x + 1, coor_y, &HIGH_SCORE, &pill_time)) {
                     dir_actual = RIGHT;
                 }
             }
         }
 
         Uint32 current_time = SDL_GetTicks(); // Tiempo actual
-        if (current_time > last_move_time + pacmanSpeed) { // Controlar el tiempo entre movimientos
+        if (current_time >= last_move_time + pacmanSpeed+10) { // Controlar el tiempo entre movimientos
             switch (dir_actual) {
                 case UP:
-                    if (checking(tablero, coor_x, coor_y - 1, &HIGH_SCORE)) {
+                    if (checking(tablero, coor_x, coor_y - 1, &HIGH_SCORE, &pill_time)) {
                         inicial_y -= altoCelda;
                         coor_y--;
                     }
                     break;
                 case DOWN:
-                    if (checking(tablero, coor_x, coor_y + 1, &HIGH_SCORE)) {
+                    if (checking(tablero, coor_x, coor_y + 1, &HIGH_SCORE, &pill_time)) {
                         inicial_y += altoCelda;
                         coor_y++;
                     }
                     break;
                 case LEFT:
-                    if (checking(tablero, coor_x - 1, coor_y, &HIGH_SCORE)) {
+                    if (checking(tablero, coor_x - 1, coor_y, &HIGH_SCORE, &pill_time)) {
                         inicial_x -= anchoCelda;
                         coor_x--;
                     }
                     break;
                 case RIGHT:
-                    if (checking(tablero, coor_x + 1, coor_y, &HIGH_SCORE)) {
+                    if (checking(tablero, coor_x + 1, coor_y, &HIGH_SCORE, &pill_time)) {
                         inicial_x += anchoCelda;
                         coor_x++;
                     }
@@ -720,31 +736,58 @@ void ventanaJuego(int **tablero) {
         }
 
         // Dibujar Pac-Man en su posición actual
-        pacman(inicial_x, inicial_y, renderer, pacmanRight1, pacmanRight2, pacmanLeft1, pacmanLeft2, pacmanUp1, pacmanUp2, pacmanDown1, pacmanDown2, &estado, dir_actual, &lastTime);
+        pacman(inicial_x, inicial_y, renderer, pacmanRight1, pacmanRight2, pacmanLeft1, pacmanLeft2, pacmanUp1, pacmanUp2, pacmanDown1, pacmanDown2, &estado, dir_actual, &lastTime, invul);
 
         //blinky
         moverFantasma(renderer, blinkyRight1, blinkyRight2, blinkyLeft1, blinkyLeft2, 
                   blinkyUp1, blinkyUp2, blinkyDown1, blinkyDown2, 
                   &blinkyX, &blinkyY, &direccionBlinky, &blinkyEstado, 
                   &ticks, &coor_x, &coor_y, tablero, anchoP, altoP);
+
         //pinky
-        moverFantasma(renderer, pinkyRight1, pinkyRight2, pinkyLeft1, pinkyLeft2, 
+        if(current_time > 5000){
+            moverFantasma(renderer, pinkyRight1, pinkyRight2, pinkyLeft1, pinkyLeft2, 
                   pinkyUp1, pinkyUp2, pinkyDown1, pinkyDown2, 
                   &pinkyX, &pinkyY, &direccionpinky, &pinkyEstado, 
                   &ticks, &coor_x, &coor_y, tablero, anchoP, altoP);
+        }
+        else{
+            SDL_Rect dstRect = {245, 230, 32, 32};
+            SDL_RenderCopy(renderer, pinkyRight1, NULL, &dstRect);
+            SDL_RenderCopy(renderer, pinkyRight2, NULL, &dstRect);
+        }
+
         //inky
-        moverFantasma(renderer, inkyRight1, inkyRight2, inkyLeft1, inkyLeft2, 
+        if(current_time > 10000){
+            moverFantasma(renderer, inkyRight1, inkyRight2, inkyLeft1, inkyLeft2, 
                   inkyUp1, inkyUp2, inkyDown1, inkyDown2, 
                   &inkyX, &inkyY, &direccioninky, &inkyEstado, 
                   &ticks, &coor_x, &coor_y, tablero, anchoP, altoP);
-        //clyde
+        }
+        else{
+            SDL_Rect dstRect = {224, 230, 32, 32};
+            SDL_RenderCopy(renderer, inkyRight1, NULL, &dstRect);
+            SDL_RenderCopy(renderer, inkyRight2, NULL, &dstRect);
+        }
 
-        moverFantasma(renderer, clydeRight1, clydeRight2, clydeLeft1, clydeLeft2, 
+        //clyde
+        if(current_time > 15000){
+            moverFantasma(renderer, clydeRight1, clydeRight2, clydeLeft1, clydeLeft2, 
                   clydeUp1, clydeUp2, clydeDown1, clydeDown2, 
                   &clydeX, &clydeY, &direccionclyde, &clydeEstado, 
                   &ticks, &coor_x, &coor_y, tablero, anchoP, altoP);
-        
-        verificarColisionPacmanFantasma(&inicial_x, &inicial_y, &coor_x, &coor_y,
+        }
+        else{
+            SDL_Rect dstRect = {200, 230, 32, 32};
+            SDL_RenderCopy(renderer, clydeRight1, NULL, &dstRect);
+            SDL_RenderCopy(renderer, clydeRight2, NULL, &dstRect);
+        }
+
+        //tiempo de gracia después de cada colisión contra fantasmas
+        if(current_time - colision_time > 7000){ 
+            invul = 0;
+        // si pasan 7 seg después de la ultima colisión se activa la detección otra vez
+            verificarColisionPacmanFantasma(&inicial_x, &inicial_y, &coor_x, &coor_y,
                                 blinkyX, blinkyY, pinkyX, pinkyY,
                                 inkyX, inkyY, clydeX, clydeY,
                                 &vidas, renderer, muerteFrames, 10,
@@ -755,13 +798,24 @@ void ventanaJuego(int **tablero) {
                                 muroHor2, esq4_2, esq3_2, esq1_2, esq2_2, interseccion1,
                                 interseccion2, interseccion3, interseccion4, interseccion5,
                                 interseccion6, esq90g1, esq90g2, esq90g3, esq90g4, borde1,
-                                borde2, rosado);
-
+                                borde2, rosado, &colision);
+            if(colision == 1){
+                colision_time = current_time;
+                colision = 0;
+                invul = 1;
+            }
+        }
+        
         if (vidas==0){
             printf("Game over!");
             ejecutando=0;
         
         }
+        if (HIGH_SCORE == 2600){
+            printf("Has ganado!");
+            ejecutando=0;
+        }
+        
         // Renderizar en pantalla
         SDL_RenderPresent(renderer);
         SDL_Delay(16);
