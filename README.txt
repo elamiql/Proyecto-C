@@ -1,10 +1,4 @@
-Proyecto Pac-Man, Programación de Computadores
-
-Integrantes (en orden por tarea):
-
--Matias Cuello Diban
--Fernanda Rubilar Sánchez
--Agustín Salgado Espinoza
+# Proyecto Pac-Man, Programación de Computadores
 
 Instrucciones compilar:
 
